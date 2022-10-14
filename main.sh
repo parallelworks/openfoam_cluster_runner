@@ -16,6 +16,10 @@ echo "$0 $wfargs"; echo
 parseArgs ${wfargs}
 exportResourceInfo
 
+echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
+replace_templated_inputs kill.sh ${wfargs}
+
+
 sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
 
 echo; echo "PREPARING CONTROLLER NODE:"
