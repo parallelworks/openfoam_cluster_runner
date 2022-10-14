@@ -1,0 +1,1 @@
+This directory contains scripts that run in the controller node to prepare the workflow
