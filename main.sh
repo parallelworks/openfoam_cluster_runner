@@ -24,10 +24,7 @@ sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
 
 echo; echo "PREPARING CONTROLLER NODE:"
 # - Build singularity container if not present
-if ! [ -f "bootstrap/${def_file}" ]; then
-    echo "ERROR: File bootstrap/${def_file} not found -- Exiting workflow!"
-    exit 1
-fi
+cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${of_image}/g" > bootstrap/${of_image}.def
 replace_templated_inputs bootstrap/bootstrap.sh ${wfargs}
 ${sshcmd} mkdir -p ${chdir}
 scp -r bootstrap ${controller}:${chdir}

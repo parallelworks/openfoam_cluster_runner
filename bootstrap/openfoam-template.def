@@ -1,0 +1,7 @@
+BootStrap: docker
+From: openfoam/__of_image__
+
+%help
+  This Singularity container of the __of_image__ docker repository
+%labels
+  Author Alvaro.Vidal
