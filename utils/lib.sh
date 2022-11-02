@@ -54,6 +54,7 @@ exportResourceInfo() {
 
     # No underscores and only lowercase
     poolname=$(echo ${poolname} | sed "s/_//g" |  tr '[:upper:]' '[:lower:]')
+    export poolname=${poolname}
 
     if [[ ${controller} == "pw.conf" ]]; then
         if [ -z "${poolname}" ]; then
@@ -69,5 +70,24 @@ exportResourceInfo() {
         exit 1
     fi
     export controller=${controller}
-    export poolname=${poolname}
+    
+    pooltype=$(${CONDA_PYTHON_EXE} utils/pool_api.py ${poolname} type)
+    if [ -z "${pooltype}" ]; then
+        echo "ERROR: Pool type not found - exiting the workflow"
+        echo "${CONDA_PYTHON_EXE} utils/pool_api.py ${poolname} type"
+        exit 
+    fi
+    export pooltype=${pooltype}
+    
+    if [[ ${pooltype} == "slurmshv2" ]]; then
+        poolworkdir=$(${CONDA_PYTHON_EXE} utils/pool_api.py ${poolname} workdir)
+        if [ -z "${poolworkdir}" ]; then
+            echo "ERROR: Pool workdir not found - exiting the workflow"
+            echo "${CONDA_PYTHON_EXE} utils/pool_api.py ${poolname} workdir"
+            exit 1
+        fi
+    else
+        poolworkdir=${HOME}
+    fi
+    export poolworkdir=${poolworkdir}
 }
