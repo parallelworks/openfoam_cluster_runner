@@ -2,7 +2,7 @@
   <command interpreter='bash'>main.sh</command>
   <inputs>
    <section name='openfoam' type='section' title='OpenFOAM' expanded='true'>
-        <param name='cases_json_file' label='JSON cases definition in remote host' type='text' value='/home/__USER__/pworks/openfoam/cyclone-template/cyclone-cases.json' help='Full path' width='50%_none'></param>
+        <param name='cases_json_file' label='JSON cases definition in remote host' type='text' value='__poolworkdir__/pw/openfoam/cyclone-template/cyclone-cases.json' help='Full path' width='50%_none'></param>
         <conditional name="partition_or_controller_cond">
             <param name='of_image' type='select' label='Base OpenFOAM image' help='Singularity container is built from the select base Docker image' width='50%_none' multiple='false'>
                 <option value="openfoam10-paraview56" >openfoam10-paraview56</option>
@@ -12,19 +12,19 @@
                 <option value="openfoam6-paraview56" >openfoam6-paraview56</option>
             </param>
             <when value="openfoam10-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='/home/__USER__/pworks/openfoam/openfoam10-paraview56.sif' help='Full path' width='50%_none'></param>
+               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/pworks/openfoam/openfoam10-paraview56.sif' help='Full path' width='50%_none'></param>
             </when>
             <when value="openfoam9-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='/home/__USER__/pworks/openfoam/openfoam9-paraview56.sif' help='Full path' width='50%_none'></param>
+               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/pworks/openfoam/openfoam9-paraview56.sif' help='Full path' width='50%_none'></param>
             </when>
             <when value="openfoam8-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='/home/__USER__/pworks/openfoam/openfoam8-paraview56.sif' help='Full path' width='50%_none'></param>
+               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/pworks/openfoam/openfoam8-paraview56.sif' help='Full path' width='50%_none'></param>
             </when>
             <when value="openfoam7-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='/home/__USER__/pworks/openfoam/openfoam7-paraview56.sif' help='Full path' width='50%_none'></param>
+               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam7-paraview56.sif' help='Full path' width='50%_none'></param>
             </when>
             <when value="openfoam6-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='/home/__USER__/pworks/openfoam/openfoam6-paraview56.sif' help='Full path' width='50%_none'></param>
+               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam6-paraview56.sif' help='Full path' width='50%_none'></param>
             </when>
         </conditional>
    </section>
