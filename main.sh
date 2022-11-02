@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-source lib.sh
+source utils/lib.sh
 export job_number=$(basename ${PWD})
 
 echo
@@ -46,7 +46,7 @@ for case_dir in ${case_dirs}; do
     # Case directory in user container
     mkdir -p ${PWD}/${case_dir}
     sbatch_sh=${PWD}/${case_dir}/sbatch.sh
-    bash create_slurm_wrapper.sh ${sbatch_sh} ${case_dir}
+    bash utils/create_slurm_wrapper.sh ${sbatch_sh} ${case_dir}
     echo "singularity exec -B ${chdir}/${case_dir}:${chdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
     cat ${sbatch_sh}
     scp ${sbatch_sh} ${controller}:${chdir}/${case_dir}
