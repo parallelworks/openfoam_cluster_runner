@@ -1,5 +1,4 @@
 {
-    "template_directory": "~/pworks/openfoam/cyclone-template",
     "cases": [
         {
             "directory": "case_1",

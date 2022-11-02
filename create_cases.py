@@ -9,13 +9,15 @@ if __name__ == '__main__':
     with open(cases_json, 'r') as f:
         cases = json.load(f)
 
+    template_directory = os.path.dirname(cases_json)
+
     for ci,case in enumerate(cases['cases']):
         print('\nGenerating case {}'.format(ci+1))
         print('  Copying template directory <{template_dir}> to case directory <{case_dir}>'.format(
-            template_dir = os.path.expanduser(cases['template_directory']),
+            template_dir = os.path.expanduser(template_directory),
             case_dir = case['directory']
         ))
-        shutil.copytree(os.path.expanduser(cases['template_directory']), case['directory'])
+        shutil.copytree(os.path.expanduser(template_directory), case['directory'])
 
         for fdict in case['files']:
             print('    Rewriting file {}'.format(fdict['path']))
