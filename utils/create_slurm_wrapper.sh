@@ -36,3 +36,18 @@ fi
 echo "#SBATCH --job-name=pw-${job_number}" >> ${session_sh}
 echo "#SBATCH --output=pw-${job_number}.out" >> ${session_sh}
 echo >> ${session_sh}
+
+cat >> ${session_sh} <<HERE
+
+# To connect the worker:
+if [ -f "${remote_sh}" ]; then
+    echo "Running  ${remote_sh}"
+    ${remote_sh}
+fi
+
+# Install singularity if it does not exist:
+if [ -z $(which singularity) ]; then
+    echo "Installing singularity"
+    bash ${chdir}/bootstrap/install_singularity.sh
+fi
+HERE
