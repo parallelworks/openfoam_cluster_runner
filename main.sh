@@ -10,6 +10,7 @@ echo "DATE:        $(date)"
 echo
 
 wfargs="$(echo $@ | sed "s|__job_number__|${job_number}|g" | sed "s|__USER__|${PW_USER}|g") --job_number ${job_number}"
+parseArgs ${wfargs}
 
 # Sets poolname, controller, pooltype and poolworkdir
 exportResourceInfo
@@ -20,6 +21,8 @@ echo "Pool workdir: ${poolworkdir}"
 echo
 
 wfargs="$(echo ${wfargs} | sed "s|__poolworkdir__|${poolworkdir}|g")"
+wfargs="$(echo ${wfargs} | sed "s|--controller pw.conf|--controller ${controller}|g")"
+
 echo "$0 $wfargs"; echo
 parseArgs ${wfargs}
 
@@ -32,6 +35,7 @@ echo; echo "READING OPENFOAM CASES"
 cases_json=$(${sshcmd} cat ${cases_json_file})
 if [ -z "${cases_json}" ]; then
     echo "ERROR: Could not read file ${cases_json_file}"
+    echo "Try: ${sshcmd} cat ${cases_json_file}"
     exit 1
 fi
 
@@ -50,7 +54,6 @@ echo "  Creating run directories:" ${case_dirs}
 python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
 scp create_cases.py ${controller}:${chdir}
 ${sshcmd} python3 ${chdir}/create_cases.py ${cases_json_file} ${chdir}
-echo
 
 echo; echo "CREATING SLURM WRAPPERS"
 for case_dir in ${case_dirs}; do

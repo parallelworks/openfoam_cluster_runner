@@ -5,6 +5,7 @@
 # to:
 # export a=1 b=2 d=4
 parseArgs() {
+    rm -f  $(dirname $0)/env.sh
     index=1
     args=""
     for arg in $@; do
@@ -70,15 +71,15 @@ exportResourceInfo() {
         exit 1
     fi
     export controller=${controller}
-    
+
     pooltype=$(${CONDA_PYTHON_EXE} utils/pool_api.py ${poolname} type)
     if [ -z "${pooltype}" ]; then
         echo "ERROR: Pool type not found - exiting the workflow"
         echo "${CONDA_PYTHON_EXE} utils/pool_api.py ${poolname} type"
-        exit 1 
+        exit 1
     fi
     export pooltype=${pooltype}
-    
+
     if [[ ${pooltype} == "slurmshv2" ]]; then
         poolworkdir=$(${CONDA_PYTHON_EXE} utils/pool_api.py ${poolname} workdir)
         if [ -z "${poolworkdir}" ]; then
