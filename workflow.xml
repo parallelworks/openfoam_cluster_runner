@@ -28,7 +28,7 @@
             </when>
         </conditional>
    </section>
-    <section name='host' type='section' title='Desktop Host' expanded='true'>
+    <section name='host' type='section' title='Slurm configuration' expanded='true'>
         <param name='partition' label='Slurm partition:' type='text' help='Partition to submit the interactive job to.' value='default' width='50%_none'>
         </param>
         <param name='numnodes' label='Number of nodes:' type='integer' min="1" max="10" help='Number of nodes to request for the interactive session.' value='1' width='50%_none'>
