@@ -75,7 +75,7 @@ exportResourceInfo() {
     if [ -z "${pooltype}" ]; then
         echo "ERROR: Pool type not found - exiting the workflow"
         echo "${CONDA_PYTHON_EXE} utils/pool_api.py ${poolname} type"
-        exit 
+        exit 1 
     fi
     export pooltype=${pooltype}
     

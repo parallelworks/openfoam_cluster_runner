@@ -28,6 +28,13 @@ replace_templated_inputs kill.sh ${wfargs}
 
 sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
 
+echo; echo "READING OPENFOAM CASES"
+cases_json=$(${sshcmd} cat ${cases_json_file})
+if [ -z "${cases_json}" ]; then
+    echo "ERROR: Could not read file ${cases_json_file}"
+    exit 1
+fi
+
 echo; echo "PREPARING CONTROLLER NODE:"
 # - Build singularity container if not present
 cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${of_image}/g" > bootstrap/${of_image}.def
@@ -38,7 +45,6 @@ ${sshcmd} bash ${chdir}/bootstrap/bootstrap.sh > bootstrap.log 2>&1
 
 
 echo; echo "CREATING OPENFOAM CASES"
-cases_json=$(${sshcmd} cat ${cases_json_file})
 case_dirs=$(python3 -c "c=${cases_json}; [ print(case['directory']) for ci,case in enumerate(c['cases'])]")
 echo "  Creating run directories:" ${case_dirs}
 python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
