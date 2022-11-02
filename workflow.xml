@@ -12,13 +12,13 @@
                 <option value="openfoam6-paraview56" >openfoam6-paraview56</option>
             </param>
             <when value="openfoam10-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/pworks/openfoam/openfoam10-paraview56.sif' help='Full path' width='50%_none'></param>
+               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam10-paraview56.sif' help='Full path' width='50%_none'></param>
             </when>
             <when value="openfoam9-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/pworks/openfoam/openfoam9-paraview56.sif' help='Full path' width='50%_none'></param>
+               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam9-paraview56.sif' help='Full path' width='50%_none'></param>
             </when>
             <when value="openfoam8-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/pworks/openfoam/openfoam8-paraview56.sif' help='Full path' width='50%_none'></param>
+               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam8-paraview56.sif' help='Full path' width='50%_none'></param>
             </when>
             <when value="openfoam7-paraview56">
                <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam7-paraview56.sif' help='Full path' width='50%_none'></param>
