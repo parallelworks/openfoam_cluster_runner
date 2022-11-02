@@ -11,7 +11,6 @@ echo
 
 wfargs="$(echo $@ | sed "s|__job_number__|${job_number}|g" | sed "s|__USER__|${PW_USER}|g") --job_number ${job_number}"
 
-parseArgs ${wfargs}
 # Sets poolname, controller, pooltype and poolworkdir
 exportResourceInfo
 echo "Pool name:    ${poolname}"
@@ -22,6 +21,7 @@ echo
 
 wfargs="$(echo ${wfargs} | sed "s|__poolworkdir__|${poolworkdir}|g")"
 echo "$0 $wfargs"; echo
+parseArgs ${wfargs}
 
 echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
 replace_templated_inputs kill.sh ${wfargs}
