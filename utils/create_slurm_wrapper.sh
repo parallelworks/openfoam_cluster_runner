@@ -40,7 +40,7 @@ echo >> ${session_sh}
 cat >> ${session_sh} <<HERE
 
 # To connect the worker:
-if [ -f "${remote_sh}" ]; then
+if [ -f "${poolworkdir}/pw/remote.sh" ]; then
     echo "Running  ${remote_sh}"
     ${remote_sh}
 fi
