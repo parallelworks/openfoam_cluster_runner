@@ -6,7 +6,7 @@ Runs an OpenFOAM parameter sweep in a slurm cluster using a singularity containe
 
 The workflow performs the following tasks:
 
-1. Prepares the controller node: Installs singularity if it is not installed and builds the singularity container if no container exists in the specified path (see input form parameters > singularity container).
+1. Prepares the controller node: Installs singularity if it is not installed and builds the singularity container if no container exists in the specified path (see input form parameters > singularity container). Needs root access!
 2. Creates the OpenFOAM cases as defined in the case definition JSON file.
 3. Creates the slurm sbatch scripts using the slurm configuration parameters of the input form and the `Allrun` bash script in the templated OpenFOAM directory
 4. Submits all the cases to the queue in parallel
