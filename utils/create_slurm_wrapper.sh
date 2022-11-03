@@ -51,4 +51,8 @@ if [ -z $(which singularity) ]; then
     bash ${chdir}/bootstrap/install_singularity.sh
 fi
 
+# To be able to open any case in Paraview
+# Be sure to go select properties -> desconstructed / reconstructed in paraview
+touch case.foam
+
 HERE
