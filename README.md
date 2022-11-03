@@ -15,7 +15,8 @@ The workflow performs the following tasks:
 
 ### 2. Templated OpenFOAM Directory:
 
-The templated OpenFOAM directory must be located in a shared directory of the slurm cluster. To ilustrate the process of preparing the OpenFOAM case directory the `cyclone-template` sample is provided in this repository. This sample corresponds to a templated version of the official cyclone OpenFOAM tutorial.
+The templated OpenFOAM directory must be located in a shared directory of the slurm cluster. To ilustrate the process of preparing the OpenFOAM case directory the `cyclone-template` sample is provided in this
+repository. This sample corresponds to a templated version of the official cyclone OpenFOAM tutorial.
 
 #### 2.1 Templated Files:
 
@@ -87,3 +88,12 @@ A bash script named `Allrun` must be located in the templated OpenFOAM directory
 ### 3. Input Form Parameters
 
 Hover over the parameters in the input form for further information.
+
+### 4. Logs:
+
+Logs are located in the `/pw/jobs/<job-number> directory`:
+
+1. `std.out`: Workflow standard output
+2. `std.err`: Workflow standard error
+3. `bootstrap.log`: Bootstrap standard output and error
+4. `<case-dir>/pw-<job-number>.out`: Slurm job standard output and error for each case
