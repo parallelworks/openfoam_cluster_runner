@@ -55,4 +55,5 @@ fi
 # Be sure to go select properties -> desconstructed / reconstructed in paraview
 touch case.foam
 
+module load singularity
 HERE
