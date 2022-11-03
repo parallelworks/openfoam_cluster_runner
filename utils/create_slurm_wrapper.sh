@@ -56,4 +56,5 @@ fi
 touch case.foam
 
 module load singularity
+
 HERE
