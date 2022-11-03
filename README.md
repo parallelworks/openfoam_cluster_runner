@@ -8,7 +8,7 @@ The workflow performs the following tasks:
 
 1. Prepares the controller node: Installs singularity if it is not installed and builds the singularity container if no container exists in the specified path (see input form parameters > singularity container). Needs root access!
 2. Creates the OpenFOAM cases as defined in the case definition JSON file.
-3. Creates the slurm sbatch scripts using the slurm configuration parameters of the input form and the `Allrun` bash script in the templated OpenFOAM directory
+3. Creates the slurm sbatch scripts using the slurm configuration parameters of the input form and the `Allrun` bash script in the templated OpenFOAM directory. The path to these batch scripts is `/pw/jobs/<job-number>/<case directory>/sbatch.sh`.
 4. Submits all the cases to the queue in parallel
 5. Streams the output from the remote job directory to the job directory in the user's account (`/pw/jobs/<job-number>/<case directory>`)
 6. Waits for the jobs to run
@@ -83,7 +83,11 @@ Note that for every case the following keywords are defined:
 
 #### 2.3 Allrun File
 
-A bash script named `Allrun` must be located in the templated OpenFOAM directory. The workflow calls this file from the sbatch slurm script.
+A bash script named `Allrun` must be located in the templated OpenFOAM directory. The workflow calls this file from the sbatch slurm script. Make sure you load the OpenFOAM environment in the script, e.g:
+
+```
+source /opt/openfoam9/etc/bashrc
+```
 
 ### 3. Input Form Parameters
 
