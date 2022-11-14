@@ -46,7 +46,7 @@ if [ -f "${poolworkdir}/pw/remote.sh" ]; then
 fi
 
 # Install singularity if it does not exist:
-if [ -z $(which singularity) ]; then
+if [ -z \$(which singularity) ]; then
     echo "Installing singularity"
     bash ${chdir}/bootstrap/install_singularity.sh
 fi
