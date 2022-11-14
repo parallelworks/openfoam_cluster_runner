@@ -49,7 +49,7 @@ fi
 {
     module load singularity
 } || {
-    echo "module load singularity failed"
+    echo "Failed to run: module load singularity"
 }
 
 # Install singularity if it does not exist:
@@ -61,5 +61,13 @@ fi
 # To be able to open any case in Paraview
 # Be sure to go select properties -> desconstructed / reconstructed in paraview
 touch case.foam
+
+# FIX new singularity error on the cloud:
+{
+    sudo sh -c 'echo user.max_user_namespaces=15000 >/etc/sysctl.d/90-max_user_namespaces.conf'
+    sudo sysctl -p /etc/sysctl.d/90-max_user_namespaces.conf
+} || {
+    echo 'Failed to increase the number of namespaces'
+}
 
 HERE
