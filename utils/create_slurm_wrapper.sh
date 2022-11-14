@@ -45,6 +45,13 @@ if [ -f "${poolworkdir}/pw/remote.sh" ]; then
     ${remote_sh}
 fi
 
+
+{
+    module load singularity
+} || {
+    echo "module load singularity failed"
+}
+
 # Install singularity if it does not exist:
 if [ -z \$(which singularity) ]; then
     echo "Installing singularity"
@@ -54,7 +61,5 @@ fi
 # To be able to open any case in Paraview
 # Be sure to go select properties -> desconstructed / reconstructed in paraview
 touch case.foam
-
-module load singularity
 
 HERE
