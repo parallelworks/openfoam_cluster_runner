@@ -1,4 +1,5 @@
 #!/bin/bash
+cd /pw/jobs/__job_number__
 sshcmd="ssh -o StrictHostKeyChecking=no __controller__"
 echo; echo "KILLING JOB"
 date
