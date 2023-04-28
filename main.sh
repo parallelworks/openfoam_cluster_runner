@@ -34,9 +34,13 @@ sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
 echo; echo "READING OPENFOAM CASES"
 cases_json=$(${sshcmd} cat ${cases_json_file})
 if [ -z "${cases_json}" ]; then
-    echo "ERROR: Could not read file ${cases_json_file}"
-    echo "Try: ${sshcmd} cat ${cases_json_file}"
-    exit 1
+    echo "WARNING: Could not read file ${cases_json_file}"
+    echo "         Try: ${sshcmd} cat ${cases_json_file}"
+    echo "         Copying sample templated case"
+    remote_cyclone_dir="$(dirname ${cases_json_file})/"
+    ${sshcmd} "mkdir -p ${remote_cyclone_dir}"
+    echo "rsync -avzq cyclone-template/ ${controller}:${remote_cyclone_dir}"
+    rsync -avzq cyclone-template/ ${controller}:${remote_cyclone_dir}
 fi
 
 echo; echo "PREPARING CONTROLLER NODE:"
