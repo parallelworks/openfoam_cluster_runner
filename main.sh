@@ -41,6 +41,12 @@ if [ -z "${cases_json}" ]; then
     ${sshcmd} "mkdir -p ${remote_cyclone_dir}"
     echo "rsync -avzq cyclone-template/ ${controller}:${remote_cyclone_dir}"
     rsync -avzq cyclone-template/ ${controller}:${remote_cyclone_dir}
+    cases_json=$(${sshcmd} cat ${cases_json_file})
+    if [ -z "${cases_json}" ]; then
+        echo "ERROR: Could not read file ${cases_json_file}"
+        echo "Try: ${sshcmd} cat ${cases_json_file}"
+        exit 1
+    fi
 fi
 
 echo; echo "PREPARING CONTROLLER NODE:"
