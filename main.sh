@@ -49,12 +49,12 @@ if [ -z "${cases_json}" ]; then
     fi
 fi
 
+echo; echo "PREPARING CONTROLLER NODE:"
+${sshcmd} mkdir -p ${chdir}
 if [ -z "${load_openfoam}" ]; then
-    echo; echo "PREPARING CONTROLLER NODE:"
     # - Build singularity container if not present
     cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${of_image}/g" > bootstrap/${of_image}.def
     replace_templated_inputs bootstrap/bootstrap.sh ${wfargs}
-    ${sshcmd} mkdir -p ${chdir}
     scp -r bootstrap ${controller}:${chdir}
     ${sshcmd} bash ${chdir}/bootstrap/bootstrap.sh > bootstrap.log 2>&1
 fi
