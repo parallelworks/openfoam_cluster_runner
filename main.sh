@@ -78,6 +78,7 @@ for case_dir in ${case_dirs}; do
         echo "singularity exec -B ${chdir}/${case_dir}:${chdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
     else
         echo ${load_openfoam} | sed "s|___| |g" >> ${sbatch_sh}
+        echo "/bin/bash ./Allrun"  >> ${sbatch_sh}
     fi
     cat ${sbatch_sh}
     scp ${sbatch_sh} ${controller}:${chdir}/${case_dir}
@@ -90,7 +91,7 @@ for case_dir in ${case_dirs}; do
     remote_sbatch_sh=${chdir}/${case_dir}/sbatch.sh
     echo "  Running:"
     echo "    $sshcmd sbatch ${remote_sbatch_sh}"
-    slurm_job=$($sshcmd sbatch ${remote_sbatch_sh} | tail -1 | awk -F ' ' '{print $4}')
+    slurm_job=$($sshcmd "bash login -c \"sbatch ${remote_sbatch_sh}\"" | tail -1 | awk -F ' ' '{print $4}')
     if [ -z "${slurm_job}" ]; then
         echo "    ERROR submitting job - exiting the workflow"
         exit 1
