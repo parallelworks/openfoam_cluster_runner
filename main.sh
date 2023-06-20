@@ -73,6 +73,7 @@ for case_dir in ${case_dirs}; do
     mkdir -p ${PWD}/${case_dir}
     sbatch_sh=${PWD}/${case_dir}/sbatch.sh
     bash utils/create_slurm_wrapper.sh ${sbatch_sh} ${case_dir}
+    echo "touch case.foam" >> ${sbatch_sh}
     if [ -z "${load_openfoam}" ]; then
         bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
         echo "singularity exec -B ${chdir}/${case_dir}:${chdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}

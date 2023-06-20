@@ -18,7 +18,6 @@ fi
 
 # To be able to open any case in Paraview
 # Be sure to go select properties -> desconstructed / reconstructed in paraview
-touch case.foam
 
 # FIX new singularity error on the cloud:
 {
