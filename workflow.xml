@@ -3,30 +3,7 @@
   <inputs>
    <section name='openfoam' type='section' title='OpenFOAM' expanded='true'>
         <param name='cases_json_file' label='JSON cases definition in remote host' type='text' value='__poolworkdir__/pw/openfoam/cyclone-template/cyclone-cases.json' help='Full path' width='50%_none'></param>
-        <conditional name="partition_or_controller_cond">
-            <param name='of_image' type='select' label='Base OpenFOAM image' help='Singularity container is built from the select base Docker image' width='50%_none' multiple='false'>
-                <option value="openfoam10-paraview56" >openfoam10-paraview56</option>
-                <option value="openfoam9-paraview56" selected="true">openfoam9-paraview56</option>
-                <option value="openfoam8-paraview56" >openfoam8-paraview56</option>
-                <option value="openfoam7-paraview56" >openfoam7-paraview56</option>
-                <option value="openfoam6-paraview56" >openfoam6-paraview56</option>
-            </param>
-            <when value="openfoam10-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam10-paraview56.sif' help='Full path' width='50%_none'></param>
-            </when>
-            <when value="openfoam9-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam9-paraview56.sif' help='Full path' width='50%_none'></param>
-            </when>
-            <when value="openfoam8-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam8-paraview56.sif' help='Full path' width='50%_none'></param>
-            </when>
-            <when value="openfoam7-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam7-paraview56.sif' help='Full path' width='50%_none'></param>
-            </when>
-            <when value="openfoam6-paraview56">
-               <param name='sif_file' label='Singularity container in remote host' type='text' value='__poolworkdir__/pw/bootstrap/openfoam/openfoam6-paraview56.sif' help='Full path' width='50%_none'></param>
-            </when>
-        </conditional>
+        <param name='load_openfoam' label='Command to load OpenFOAM' type='text' value='spack load openfoam@2206%gcc@=10.4.0 arch=linux-rocky8-zen3' help='E.g.: module load, spack load, source, export PATH=, etc' width='50%_none'></param>
    </section>
     <section name='host' type='section' title='Slurm configuration' expanded='true'>
         <param name='partition' label='Slurm partition:' type='text' help='Partition to submit the interactive job to.' value='default' width='50%_none'>

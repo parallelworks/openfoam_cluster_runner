@@ -49,14 +49,15 @@ if [ -z "${cases_json}" ]; then
     fi
 fi
 
-echo; echo "PREPARING CONTROLLER NODE:"
-# - Build singularity container if not present
-cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${of_image}/g" > bootstrap/${of_image}.def
-replace_templated_inputs bootstrap/bootstrap.sh ${wfargs}
-${sshcmd} mkdir -p ${chdir}
-scp -r bootstrap ${controller}:${chdir}
-${sshcmd} bash ${chdir}/bootstrap/bootstrap.sh > bootstrap.log 2>&1
-
+if [ -z "${load_openfoam}" ]; then
+    echo; echo "PREPARING CONTROLLER NODE:"
+    # - Build singularity container if not present
+    cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${of_image}/g" > bootstrap/${of_image}.def
+    replace_templated_inputs bootstrap/bootstrap.sh ${wfargs}
+    ${sshcmd} mkdir -p ${chdir}
+    scp -r bootstrap ${controller}:${chdir}
+    ${sshcmd} bash ${chdir}/bootstrap/bootstrap.sh > bootstrap.log 2>&1
+fi
 
 echo; echo "CREATING OPENFOAM CASES"
 case_dirs=$(python3 -c "c=${cases_json}; [ print(case['directory']) for ci,case in enumerate(c['cases'])]")
@@ -72,7 +73,12 @@ for case_dir in ${case_dirs}; do
     mkdir -p ${PWD}/${case_dir}
     sbatch_sh=${PWD}/${case_dir}/sbatch.sh
     bash utils/create_slurm_wrapper.sh ${sbatch_sh} ${case_dir}
-    echo "singularity exec -B ${chdir}/${case_dir}:${chdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
+    if [ -z "${load_openfoam}" ]; then
+        bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
+        echo "singularity exec -B ${chdir}/${case_dir}:${chdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
+    else
+        echo ${load_openfoam} | sed "s|___| |g" >> ${sbatch_sh}
+    fi
     cat ${sbatch_sh}
     scp ${sbatch_sh} ${controller}:${chdir}/${case_dir}
 done
