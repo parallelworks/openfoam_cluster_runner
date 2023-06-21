@@ -137,6 +137,13 @@ while true; do
             scp ${controller}: ${controller}:${jobdir}/${case_dir}/pw-${job_number}.out ${case_dir}
         fi
         echo "  Slurm job ${slurm_job} status is ${sj_status}"
+        if [[ "${sj_status}" == "FAILED" ]]; then
+            FAILED=true
+        fi
     done
     sleep 60
 done
+
+if [[ "${FAILED}" == "true" ]]; then
+    exit 1
+fi
