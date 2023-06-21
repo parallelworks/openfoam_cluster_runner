@@ -20,7 +20,7 @@ echo "Resource type:    ${pooltype}"
 echo "Resource workdir: ${poolworkdir}"
 echo
 
-wfargs="$(echo ${wfargs} | sed "s|__RESOURCE_WORKDIR__|${resource_workdir}|g")"
+wfargs="$(echo ${wfargs} | sed "s|__RESOURCE_WORKDIR__|${poolworkdir}|g")"
 wfargs="$(echo ${wfargs} | sed "s|--_pw_controller pw.conf|--_pw_controller ${controller}|g")"
 
 echo "$0 $wfargs"; echo

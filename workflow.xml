@@ -2,7 +2,7 @@
   <command interpreter='bash'>main.sh</command>
   <inputs>
    <section name='openfoam' type='section' title='OpenFOAM' expanded='true'>
-        <param name='_pw_cases_json_file' label='JSON ases definition in remote host' type='text' value='__poolworkdir__/pw/openfoam/cyclone-esi-template/cyclone-cases.json' help='Full path' width='50%_none'></param>
+        <param name='_pw_cases_json_file' label='JSON ases definition in remote host' type='text' value='__RESOURCE_WORKDIR__/pw/openfoam/cyclone-esi-template/cyclone-cases.json' help='Full path' width='50%_none'></param>
         <param name='_pw_load_openfoam' label='Command to Load OpenFOAM' type='text' value='spack load openfoam@2206%gcc@=10.4.0 arch=linux-rocky8-zen3' help='E.g.: module load, spack load, source, export PATH=, etc' width='50%_none'></param>
    </section>
     <section name='ofhost' type='section' title='Slurm configuration' expanded='true'>
