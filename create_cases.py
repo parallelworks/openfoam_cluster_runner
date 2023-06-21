@@ -14,9 +14,9 @@ def read_args():
 if __name__ == '__main__':
     args = read_args()
     cases_json = args['cases_json']
-    chdir = args['chdir']
+    jobdir = args['jobdir']
 
-    os.chdir(chdir)
+    os.chdir(jobdir)
 
     with open(cases_json, 'r') as f:
         cases = json.load(f)
