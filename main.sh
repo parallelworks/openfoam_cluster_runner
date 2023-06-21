@@ -57,7 +57,7 @@ if [ -z "${load_openfoam}" ]; then
 fi
 
 cases_json_file=${openfoam_case}/cases.json
-json_exists==$(${sshcmd} "[ -f '${cases_json_file}' ] && echo 'true' || echo 'false'")
+json_exists=$(${sshcmd} "[ -f '${cases_json_file}' ] && echo 'true' || echo 'false'")
 if [[ "${json_exists}" == "true" ]]; then
     echo; echo "CREATING OPENFOAM CASES"
     cases_json=$(${sshcmd} cat ${cases_json_file})
@@ -104,7 +104,7 @@ for case_dir in ${case_dirs}; do
     echo "  Case directory: ${case_dir}"
     remote_sbatch_sh=${jobdir}/${case_dir}/sbatch.sh
     echo "  Running:"
-    echo "    $sshcmd sbatch ${remote_sbatch_sh}"
+    echo "    $sshcmd \"bash --login -c \\"sbatch ${remote_sbatch_sh}\\"\""
     slurm_job=$($sshcmd "bash --login -c \"sbatch ${remote_sbatch_sh}\"" | tail -1 | awk -F ' ' '{print $4}')
     if [ -z "${slurm_job}" ]; then
         echo "    ERROR submitting job - exiting the workflow"
