@@ -9,7 +9,7 @@ echo "USER:        ${PW_USER}"
 echo "DATE:        $(date)"
 echo
 
-wfargs="$(echo $@ | sed "s|__job_number__|${job_number}|g" | sed "s|__USER__|${PW_USER}|g") --job_number ${job_number}"
+wfargs="$(echo $@ | sed "s|__JOB_NUMBER__|${job_number}|g" | sed "s|__USER__|${PW_USER}|g") --job_number ${job_number}"
 parseArgs ${wfargs}
 
 # Sets poolname, controller, pooltype and poolworkdir
@@ -25,6 +25,11 @@ wfargs="$(echo ${wfargs} | sed "s|--controller pw.conf|--controller ${controller
 
 echo "$0 $wfargs"; echo
 parseArgs ${wfargs}
+
+echo; echo "CREATING GENERAL SLURM HEADER"
+getBatchScriptHeader ofhost > slurm_directives.sh
+chmod +x slurm_directives.sh
+cat slurm_directives.sh
 
 echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
 replace_templated_inputs kill.sh ${wfargs}
@@ -50,13 +55,13 @@ if [ -z "${cases_json}" ]; then
 fi
 
 echo; echo "PREPARING CONTROLLER NODE:"
-${sshcmd} mkdir -p ${chdir}
+${sshcmd} mkdir -p ${jobdir}
 if [ -z "${load_openfoam}" ]; then
     # - Build singularity container if not present
     cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${of_image}/g" > bootstrap/${of_image}.def
     replace_templated_inputs bootstrap/bootstrap.sh ${wfargs}
-    scp -r bootstrap ${controller}:${chdir}
-    ${sshcmd} bash ${chdir}/bootstrap/bootstrap.sh > bootstrap.log 2>&1
+    scp -r bootstrap ${controller}:${jobdir}
+    ${sshcmd} bash ${jobdir}/bootstrap/bootstrap.sh > bootstrap.log 2>&1
 fi
 
 echo; echo "CREATING OPENFOAM CASES"
@@ -64,7 +69,7 @@ case_dirs=$(python3 -c "c=${cases_json}; [ print(case['directory']) for ci,case 
 echo "  Creating run directories:" ${case_dirs}
 python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
 scp create_cases.py ${controller}:${chdir}
-${sshcmd} python3 ${chdir}/create_cases.py ${cases_json_file} ${chdir}
+${sshcmd} python3 ${jobdir}/create_cases.py ${cases_json_file} ${jobdir}
 
 echo; echo "CREATING SLURM WRAPPERS"
 for case_dir in ${case_dirs}; do
@@ -72,13 +77,17 @@ for case_dir in ${case_dirs}; do
     # Case directory in user container
     mkdir -p ${PWD}/${case_dir}
     sbatch_sh=${PWD}/${case_dir}/sbatch.sh
-    bash utils/create_slurm_wrapper.sh ${sbatch_sh} ${case_dir}
-    echo "touch case.foam" >> ${sbatch_sh}
+    chdir=${jobdir}/${case_dir}
+    # Create submit script
+    cp slurm_directives.sh ${sbatch_sh}
+    echo "#SBATCH --chdir=${chdir}" >> ${sbatch_sh}
+    echo "cd ${chdir}"              >> ${sbatch_sh}
+    echo "touch case.foam"          >> ${sbatch_sh}
     if [ -z "${load_openfoam}" ]; then
         bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
-        echo "singularity exec -B ${chdir}/${case_dir}:${chdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
+        echo "singularity exec -B ${jobdir}/${case_dir}:${jobdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
     else
-        echo ${load_openfoam} | sed "s|___| |g" >> ${sbatch_sh}
+        echo "${load_openfoam}" | sed "s|___| |g" | tr ';' '\n' >> ${sbatch_sh}
         echo "/bin/bash ./Allrun"  >> ${sbatch_sh}
     fi
     cat ${sbatch_sh}
