@@ -65,7 +65,9 @@ if [[ "${json_exists}" == "true" ]]; then
     echo "  Creating run directories:" ${case_dirs}
     python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
     scp create_cases.py ${controller}:${jobdir}
-    ${sshcmd} python3 ${jobdir}/create_cases.py ${cases_json_file} ${jobdir}
+    # Obtain and format OpenFOAM parameters from workflow input form
+    formparams=$(env | grep ofparam_ | sed "s|ofparam_|--|g" | sed "s|=| |g")
+    ${sshcmd} python3 ${jobdir}/create_cases.py ${cases_json_file} ${jobdir} ${formparams}
 else
     cases_dirs="case"
     echo; echo "Copying OpenFOAM case from <${openfoam_case}> to <${cases_dirs}>"

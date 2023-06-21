@@ -1,9 +1,21 @@
-import json, sys, shutil, os
+import json, sys, shutil, os, argparse
+
+
+def read_args():
+    parser = argparse.ArgumentParser()
+    parsed, unknown = parser.parse_known_args()
+    for arg in unknown:
+        if arg.startswith(("-", "--")):
+            parser.add_argument(arg, default="", nargs="?")
+    args = vars(parser.parse_args())
+    return args
 
 
 if __name__ == '__main__':
-    cases_json = sys.argv[1]
-    chdir = sys.argv[2]
+    args = read_args()
+    cases_json = args['cases_json']
+    chdir = args['chdir']
+
     os.chdir(chdir)
 
     with open(cases_json, 'r') as f:
@@ -25,8 +37,12 @@ if __name__ == '__main__':
             ftext = f.read()
             f.close()
             for param in fdict['parameters']:
-                print('      Replacing placeholder <{}> with value <{}>'.format(param['placeholder'], str(param['value'])))
-                ftext = ftext.replace(param['placeholder'], str(param['value']))
+                placeholder = param['placeholder']
+                value = str(param['value'])
+                if placeholder in args:
+                    value = args[placeholder].replace('___', ' ')
+                print('      Replacing placeholder <{}> with value <{}>'.format(placeholder, value))
+                ftext = ftext.replace(placeholder, value)
 
             f = open(os.path.join(case['directory'], fdict['path']), mode='w')
             f.write(ftext)
