@@ -124,6 +124,9 @@ while true; do
 
     if [ -z "${submitted_jobs}" ]; then
         echo "  All jobs are completed. Please check job logs in directories <" ${case_dirs} "> and results"
+        if [[ "${FAILED}" == "true" ]]; then
+            exit 1
+        fi
         exit 0
     fi
 
@@ -143,7 +146,3 @@ while true; do
     done
     sleep 60
 done
-
-if [[ "${FAILED}" == "true" ]]; then
-    exit 1
-fi
