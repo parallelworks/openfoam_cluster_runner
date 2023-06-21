@@ -33,6 +33,7 @@ cat slurm_directives.sh
 
 echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
 sed -i "s|__controller__|${controller}|g" kill.sh
+sed -i "s|__job_number__|${job_number}|g" kill.sh
 
 sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
 
