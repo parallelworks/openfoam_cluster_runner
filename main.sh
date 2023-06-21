@@ -135,7 +135,7 @@ while true; do
         sj_status=$($sshcmd squeue -j ${slurm_job} | tail -n+2 | awk '{print $5}')
         if [ -z "${sj_status}" ]; then
             mv ${sj} ${sj}.completed
-            sj_status=$($sshcmd sacct -j ${slurm_job}  --format=state | tail -n1)
+            sj_status=$($sshcmd sacct -j ${slurm_job}  --format=state | tail -n1 | tr -d ' ')
             case_dir=$(dirname ${sj} | sed "s|${PWD}/||g")
             scp ${controller}: ${controller}:${jobdir}/${case_dir}/pw-${job_number}.out ${case_dir}
         fi
