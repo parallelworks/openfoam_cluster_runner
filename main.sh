@@ -68,7 +68,7 @@ echo; echo "CREATING OPENFOAM CASES"
 case_dirs=$(python3 -c "c=${cases_json}; [ print(case['directory']) for ci,case in enumerate(c['cases'])]")
 echo "  Creating run directories:" ${case_dirs}
 python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
-scp create_cases.py ${controller}:${chdir}
+scp create_cases.py ${controller}:${jobdir}
 ${sshcmd} python3 ${jobdir}/create_cases.py ${cases_json_file} ${jobdir}
 
 echo; echo "CREATING SLURM WRAPPERS"
@@ -98,7 +98,7 @@ done
 echo; echo "LAUNCHING JOBS"
 for case_dir in ${case_dirs}; do
     echo "  Case directory: ${case_dir}"
-    remote_sbatch_sh=${chdir}/${case_dir}/sbatch.sh
+    remote_sbatch_sh=${jobdir}/${case_dir}/sbatch.sh
     echo "  Running:"
     echo "    $sshcmd sbatch ${remote_sbatch_sh}"
     slurm_job=$($sshcmd "bash --login -c \"sbatch ${remote_sbatch_sh}\"" | tail -1 | awk -F ' ' '{print $4}')
@@ -129,7 +129,7 @@ while true; do
         if [ -z "${sj_status}" ]; then
             mv ${sj} ${sj}.completed
             case_dir=$(dirname ${sj} | sed "s|${PWD}/||g")
-            scp ${controller}: ${controller}:${chdir}/${case_dir}/pw-${job_number}.out ${case_dir}
+            scp ${controller}: ${controller}:${jobdir}/${case_dir}/pw-${job_number}.out ${case_dir}
         fi
     done
     sleep 60
