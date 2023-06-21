@@ -38,31 +38,12 @@ sed -i "s|__job_number__|${job_number}|g" kill.sh
 sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
 
 echo; echo "CHECKING OPENFOAM CASE"
-case_exists==$(${sshcmd} "[ -d '${openfoam_case}' ] && echo 'true' || echo 'false'")
+case_exists=$(${sshcmd} "[ -d '${openfoam_case}' ] && echo 'true' || echo 'false'")
 
 if ! [[ "${case_exists}" == "true" ]]; then
     echo "ERROR: Could find OpenFOAM case <${openfoam_case}> on remote host <${controller}>"
     echo "Try: ${sshcmd} ls ${openfoam_case}"
     exit 1
-fi
-
-if [[ "${case_json}" == "true" ]]; then
-    cases_json=$(${sshcmd} cat ${cases_json_file})
-    if [ -z "${cases_json}" ]; then
-        
-    echo "WARNING: Could not read file ${cases_json_file}"
-    echo "         Try: ${sshcmd} cat ${cases_json_file}"
-    echo "         Copying sample templated case"
-    remote_cyclone_dir="$(dirname ${cases_json_file})/"
-    ${sshcmd} "mkdir -p ${remote_cyclone_dir}"
-    echo "rsync -avzq cyclone-template/ ${controller}:${remote_cyclone_dir}"
-    rsync -avzq cyclone-template/ ${controller}:${remote_cyclone_dir}
-    cases_json=$(${sshcmd} cat ${cases_json_file})
-    if [ -z "${cases_json}" ]; then
-        echo "ERROR: Could not read file ${cases_json_file}"
-        echo "Try: ${sshcmd} cat ${cases_json_file}"
-        exit 1
-    fi
 fi
 
 echo; echo "PREPARING CONTROLLER NODE:"
