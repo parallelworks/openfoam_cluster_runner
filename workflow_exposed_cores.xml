@@ -16,7 +16,9 @@
         </param>
         <param name='_pw__ofhost__sch__dd_partition_e_' label='Slurm Partition' type='text' help='Name of the SLURM partition to run the OpenFOAM cases' value='normal' width='50%_none'>
         </param>
-        <param name='_pw__ofhost__sch__dd_cpus_d_per_d_task_e_' label='CPUs per Task' type='integer' min="1" max="120" help='CPUs per Task to run each OpenFOAM case, --cpus-per-task=value slurm directive' value='60' width='50%_none'>
+        <param name='_pw__ofhost__sch__dd_cpus_d_per_d_task_e_' label='CPUs per Task' type='integer' min="1" max="60" help='--cpus-per-task=value slurm directive' value='60' width='50%_none'>
+        </param>
+        <param name='_pw__ofhost__sch__dd_nodes_e_' label='Number of Nodes' type='integer' min="1" max="60" help='--nodes=value slurm directive' value='1' width='50%_none'>
         </param>
         <param name='_pw__ofhost__sch__dd_time_e_' label='Walltime' type='text' help='Maximum walltime per OpenFOAM case' value='02:00:00' width='50%_none'>
         </param>
