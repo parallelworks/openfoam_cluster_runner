@@ -32,7 +32,7 @@ chmod +x slurm_directives.sh
 cat slurm_directives.sh
 
 echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
-replace_templated_inputs kill.sh ${wfargs}
+sed -i "s|__controller__|${controller}|g" kill.sh
 
 sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
 

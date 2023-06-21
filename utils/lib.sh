@@ -19,26 +19,6 @@ parseArgs() {
     done
 }
 
-replace_templated_inputs() {
-    echo Replacing templated inputs
-    script=$1
-    index=1
-    for arg in $@; do
-        prefix=$(echo "${arg}" | cut -c1-2)
-	    if [[ ${prefix} == '--' ]]; then
-	        pname=$(echo $@ | cut -d ' ' -f${index} | sed 's/--//g')
-	        pval=$(echo $@ | cut -d ' ' -f$((index + 1)))
-	        # To support empty inputs (--a 1 --b --c 3)
-	        if [ ${pval:0:2} != "--" ]; then
-                echo "    sed -i \"s|__${pname}__|${pval}|g\" ${script}"
-		        sed -i "s|__${pname}__|${pval}|g" ${script}
-	        fi
-	    fi
-        index=$((index+1))
-    done
-}
-
-
 exportResourceInfo() {
     # Get poolname from pw.conf
     if [ -z "${poolname}" ] || [[ "${poolname}" == "pw.conf" ]]; then
@@ -132,7 +112,6 @@ getBatchScriptHeader() {
     scheduler_directives="${scheduler_directives}$(getSchedulerDirectivesFromInputForm ${elabel})"
     echo "#!/bin/bash"
     workdir=$(env | grep ${elabel}_workdir | sed "s/${elabel}_workdir=//g" )
-    jobdir=${workdir}/pw/jobs/${job_number}
     jobschedulertype=$(env | grep ${elabel}_jobschedulertype | sed "s/${elabel}_jobschedulertype=//g" )
     scheduler_directives=";-o ${jobdir}/${elabel}_script.out;-e ${jobdir}/${elabel}_script.out;${scheduler_directives}"
     if [[ ${jobschedulertype} == "SLURM" ]]; then
