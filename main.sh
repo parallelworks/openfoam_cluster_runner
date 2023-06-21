@@ -37,9 +37,19 @@ sed -i "s|__job_number__|${job_number}|g" kill.sh
 
 sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
 
-echo; echo "READING OPENFOAM CASES"
-cases_json=$(${sshcmd} cat ${cases_json_file})
-if [ -z "${cases_json}" ]; then
+echo; echo "CHECKING OPENFOAM CASE"
+case_exists==$(${sshcmd} "[ -d '${openfoam_case}' ] && echo 'true' || echo 'false'")
+
+if ! [[ "${case_exists}" == "true" ]]; then
+    echo "ERROR: Could find OpenFOAM case <${openfoam_case}> on remote host <${controller}>"
+    echo "Try: ${sshcmd} ls ${openfoam_case}"
+    exit 1
+fi
+
+if [[ "${case_json}" == "true" ]]; then
+    cases_json=$(${sshcmd} cat ${cases_json_file})
+    if [ -z "${cases_json}" ]; then
+        
     echo "WARNING: Could not read file ${cases_json_file}"
     echo "         Try: ${sshcmd} cat ${cases_json_file}"
     echo "         Copying sample templated case"
@@ -65,12 +75,22 @@ if [ -z "${load_openfoam}" ]; then
     ${sshcmd} bash ${jobdir}/bootstrap/bootstrap.sh > bootstrap.log 2>&1
 fi
 
-echo; echo "CREATING OPENFOAM CASES"
-case_dirs=$(python3 -c "c=${cases_json}; [ print(case['directory']) for ci,case in enumerate(c['cases'])]")
-echo "  Creating run directories:" ${case_dirs}
-python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
-scp create_cases.py ${controller}:${jobdir}
-${sshcmd} python3 ${jobdir}/create_cases.py ${cases_json_file} ${jobdir}
+cases_json_file=${openfoam_case}/cases.json
+json_exists==$(${sshcmd} "[ -f '${cases_json_file}' ] && echo 'true' || echo 'false'")
+if [[ "${json_exists}" == "true" ]]; then
+    echo; echo "CREATING OPENFOAM CASES"
+    cases_json=$(${sshcmd} cat ${cases_json_file})
+    case_dirs=$(python3 -c "c=${cases_json}; [ print(case['directory']) for ci,case in enumerate(c['cases'])]")
+    echo "  Creating run directories:" ${case_dirs}
+    python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
+    scp create_cases.py ${controller}:${jobdir}
+    ${sshcmd} python3 ${jobdir}/create_cases.py ${cases_json_file} ${jobdir}
+else
+    cases_dirs="case"
+    echo; echo "Copying OpenFOAM case from <${openfoam_case}> to <${cases_dirs}>"
+    ${sshcmd} "cp -r ${openfoam_case} ${cases_dirs}"
+fi
+
 
 echo; echo "CREATING SLURM WRAPPERS"
 for case_dir in ${case_dirs}; do
