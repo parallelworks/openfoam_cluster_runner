@@ -6,9 +6,9 @@
         </param>
         <param name='_pw_load_openfoam' label='Command to Load OpenFOAM' type='text' value='spack load openfoam@2206%gcc@=10.4.0 arch=linux-rocky8-zen3' help='E.g.: module load, spack load, source, export PATH=, etc' width='100%_none'>
         </param>
-        <param name='_pw_ofparam___numberOfSubdomains__' label='Number of Subdomains' type='integer' min="1" max="120" help='OpenFOAM parameter numberOfSubdomains in the system/decomposeParDict file' value='60' width='50%_none'>
+        <param name='_pw_ofparam___numberOfSubdomains__' label='Number of Subdomains' type='integer' min="1" max="120" help='OpenFOAM parameter numberOfSubdomains in the system/decomposeParDict file' value='60' width='50%'>
         </param>
-        <param name='_pw_ofparam___nx_ny_nz__' label='Coefficients to Split Mesh in the x, y and z Directions' type='text' value='6 5 2' help='OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains' width='100%_none'>
+        <param name='_pw_ofparam___nx_ny_nz__' label='Coefficients to Split Mesh in the x, y and z Directions' type='text' value='6 5 2' help='OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains' width='50%'>
         </param>
    </section>
     <section name='ofhost' type='section' title='Slurm configuration' expanded='true'>
