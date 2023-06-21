@@ -80,6 +80,8 @@ for case_dir in ${case_dirs}; do
     chdir=${jobdir}/${case_dir}
     # Create submit script
     cp slurm_directives.sh ${sbatch_sh}
+    echo "#SBATCH -o ${chdir}/pw-${job_number}.out" >> ${sbatch_sh}
+    echo "#SBATCH -e ${chdir}/pw-${job_number}.out" >> ${sbatch_sh}
     echo "#SBATCH --chdir=${chdir}" >> ${sbatch_sh}
     echo "cd ${chdir}"              >> ${sbatch_sh}
     echo "touch case.foam"          >> ${sbatch_sh}

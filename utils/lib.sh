@@ -113,7 +113,6 @@ getBatchScriptHeader() {
     echo "#!/bin/bash"
     workdir=$(env | grep ${elabel}_workdir | sed "s/${elabel}_workdir=//g" )
     jobschedulertype=$(env | grep ${elabel}_jobschedulertype | sed "s/${elabel}_jobschedulertype=//g" )
-    scheduler_directives=";-o ${jobdir}/${elabel}_script.out;-e ${jobdir}/${elabel}_script.out;${scheduler_directives}"
     if [[ ${jobschedulertype} == "SLURM" ]]; then
         directive_prefix="#SBATCH"
         scheduler_directives="${scheduler_directives};--job-name=${elabel}_${job_number}"
