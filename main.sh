@@ -130,12 +130,13 @@ while true; do
     for sj in ${submitted_jobs}; do
         slurm_job=$(cat ${sj})
         sj_status=$($sshcmd squeue -j ${slurm_job} | tail -n+2 | awk '{print $5}')
-        echo "  Slurm job ${slurm_job} status is ${sj_status}"
         if [ -z "${sj_status}" ]; then
             mv ${sj} ${sj}.completed
+            sj_status=$($sshcmd sacct -j ${slurm_job}  --format=state | tail -n1)
             case_dir=$(dirname ${sj} | sed "s|${PWD}/||g")
             scp ${controller}: ${controller}:${jobdir}/${case_dir}/pw-${job_number}.out ${case_dir}
         fi
+        echo "  Slurm job ${slurm_job} status is ${sj_status}"
     done
     sleep 60
 done
