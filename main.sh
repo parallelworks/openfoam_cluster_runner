@@ -14,14 +14,14 @@ parseArgs ${wfargs}
 
 # Sets poolname, controller, pooltype and poolworkdir
 exportResourceInfo
-echo "Pool name:    ${poolname}"
-echo "controller:   ${controller}"
-echo "Pool type:    ${pooltype}"
-echo "Pool workdir: ${poolworkdir}"
+echo "Resource name:    ${poolname}"
+echo "Controller:       ${controller}"
+echo "Resource type:    ${pooltype}"
+echo "Resource workdir: ${poolworkdir}"
 echo
 
-wfargs="$(echo ${wfargs} | sed "s|__poolworkdir__|${poolworkdir}|g")"
-wfargs="$(echo ${wfargs} | sed "s|--controller pw.conf|--controller ${controller}|g")"
+wfargs="$(echo ${wfargs} | sed "s|__RESOURCE_WORKDIR__|${resource_workdir}|g")"
+wfargs="$(echo ${wfargs} | sed "s|--_pw_controller pw.conf|--_pw_controller ${controller}|g")"
 
 echo "$0 $wfargs"; echo
 parseArgs ${wfargs}
