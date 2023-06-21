@@ -91,7 +91,7 @@ for case_dir in ${case_dirs}; do
         echo "/bin/bash ./Allrun"  >> ${sbatch_sh}
     fi
     cat ${sbatch_sh}
-    scp ${sbatch_sh} ${controller}:${chdir}/${case_dir}
+    scp ${sbatch_sh} ${controller}:${jobdir}/${case_dir}
 done
 
 
