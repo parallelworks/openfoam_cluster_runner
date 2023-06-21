@@ -149,9 +149,3 @@ getBatchScriptHeader() {
     fi
     echo ${scheduler_directives} | sed "s|;;|;|g" | sed "s|;|;${directive_prefix} |g" | sed "s|___| |g" | tr ';' '\n'
 }
-
-parseArgs $@
-
-
-getBatchScriptHeader ofhost > ofhost.sh
-chmod +x ofhost.sh
