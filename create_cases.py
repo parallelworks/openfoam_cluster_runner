@@ -1,4 +1,4 @@
-import json, sys, shutil, os, argparse
+import json, shutil, os, argparse
 
 
 def read_args():
