@@ -89,6 +89,9 @@ for case_dir in ${case_dirs}; do
     echo "#SBATCH --chdir=${chdir}" >> ${sbatch_sh}
     echo "cd ${chdir}"              >> ${sbatch_sh}
     echo "touch case.foam"          >> ${sbatch_sh}
+    if [[ "${pooltype}" == "slurmshv2" ]]; then
+        echo "    bash ${poolworkdir}/pw/.pw/remote.sh" >> ${sbatch_sh}
+    fi
     if [ -z "${load_openfoam}" ]; then
         bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
         echo "singularity exec -B ${jobdir}/${case_dir}:${jobdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
