@@ -70,8 +70,8 @@ if [[ "${json_exists}" == "true" ]]; then
     ${sshcmd} python3 ${jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${jobdir} ${formparams}
 else
     case_dirs="case"
-    echo; echo "Copying OpenFOAM case from <${openfoam_case}> to <${cases_dirs}>"
-    ${sshcmd} "cp -r ${openfoam_case} ${cases_dirs}"
+    echo; echo "Copying OpenFOAM case from <${openfoam_case}> to <${case_dirs}>"
+    ${sshcmd} "cp -r ${openfoam_case} ${case_dirs}"
 fi
 
 
