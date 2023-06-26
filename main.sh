@@ -90,7 +90,7 @@ for case_dir in ${case_dirs}; do
     echo "cd ${chdir}"              >> ${sbatch_sh}
     echo "touch case.foam"          >> ${sbatch_sh}
     if [[ "${pooltype}" == "slurmshv2" ]]; then
-        echo "    bash ${poolworkdir}/pw/.pw/remote.sh" >> ${sbatch_sh}
+        echo "bash ${poolworkdir}/pw/.pw/remote.sh" >> ${sbatch_sh}
     fi
     if [ -z "${load_openfoam}" ]; then
         bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
