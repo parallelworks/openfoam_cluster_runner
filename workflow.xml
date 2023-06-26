@@ -3,14 +3,15 @@
   <inputs>
    <section name='openfoam' type='section' title='OpenFOAM' expanded='true'>
         <param name='_pw_openfoam_case' label='OpenFOAM Case Directory' type='text' value='__RESOURCE_WORKDIR__/pw/openfoam/cyclone-esi-template/' help='Full path to OpenFOAM case directory' width='100%_none'></param>
-        <param name='_pw_load_openfoam' label='Command to Load OpenFOAM' type='text' value='spack load openfoam@2206%gcc@=10.4.0 arch=linux-rocky8-zen3' help='E.g.: module load, spack load, source, export PATH=, etc' width='100%_none'></param>
+        <param name='_pw_load_openfoam' label='Command to Load OpenFOAM' type='text' value='spack load openfoam@2206; module load gnu12/12.2.0 openmpi4/4.1.4' help='E.g.: module load, spack load, source, export PATH=, etc' width='100%_none'>
+        </param>
    </section>
     <section name='ofhost' type='section' title='Slurm Configuration' expanded='true'>
         <param name='_pw_ofhost_jobschedulertype' label='Job Scheduler Type' type='hidden' value='SLURM' width='50%_none'>
         </param>
         <param name='_pw__ofhost__sch__dd_partition_e_' label='Slurm Partition' type='text' help='Name of the SLURM partition to run the OpenFOAM cases' value='normal' width='50%_none'>
         </param>
-        <param name='_pw__ofhost__sch__dd_cpus_d_per_d_task_e_' label='CPUs per Task' type='integer' min="1" max="60" help='--cpus-per-task=value slurm directive' value='60' width='50%_none'>
+        <param name='_pw__ofhost__sch__dd_ntasks_d_per_d_node_e_' label='Tasks per Node' type='integer' min="1" max="60" help='--ntasks-per-node=value slurm directive' value='60' width='50%_none'>
         </param>
         <param name='_pw__ofhost__sch__dd_nodes_e_' label='Number of Nodes' type='integer' min="1" max="2" help='--nodes=value slurm directive' value='1' width='50%_none'>
         </param>
