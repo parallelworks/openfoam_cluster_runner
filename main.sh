@@ -126,10 +126,11 @@ while true; do
     submitted_jobs=$(find . -name slurm_job.submitted)
 
     if [ -z "${submitted_jobs}" ]; then
-        echo "  All jobs are completed. Please check job logs in directories <" ${case_dirs} "> and results"
         if [[ "${FAILED}" == "true" ]]; then
+            echo "ERROR: Jobs <${FAILED_JOBS}> failed"
             exit 1
         fi
+        echo "  All jobs are completed. Please check job logs in directories <" ${case_dirs} "> and results"
         exit 0
     fi
 
@@ -145,6 +146,7 @@ while true; do
         echo "  Slurm job ${slurm_job} status is ${sj_status}"
         if [[ "${sj_status}" == "FAILED" ]]; then
             FAILED=true
+            FAILED_JOBS="${slurm_job}, ${FAILED_JOBS}"
         fi
     done
     sleep 60
