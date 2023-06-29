@@ -42,6 +42,7 @@ if ! [[ "${case_exists}" == "true" ]]; then
 fi
 
 echo; echo "PREPARING CONTROLLER NODE"
+echo "${sshcmd} mkdir -p ${remote_job_dir}"
 ${sshcmd} mkdir -p ${remote_job_dir}
 if [ -z "${openfoam_load_cmd}" ]; then
     # - Build singularity container if not present
