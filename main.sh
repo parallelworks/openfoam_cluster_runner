@@ -1,62 +1,57 @@
 #!/bin/bash
-set -x
-source utils/lib.sh
-export job_number=$(basename ${PWD})
+date
+# Resource label
+export rlabel=ofhost
+export job_dir=$(pwd | rev | cut -d'/' -f1-2 | rev)
+export job_id=$(echo ${job_dir} | tr '/' '-')
 
-echo
-echo "JOB NUMBER:  ${job_number}"
-echo "USER:        ${PW_USER}"
-echo "DATE:        $(date)"
-echo
+echo; echo "LOADING AND PREPARING INPUTS"
+# Overwrite input form and resource definition page defaults
+sed -i "s|__USER__|${PW_USER}|g" inputs.sh
 
-wfargs="$(echo $@ | sed "s|__JOB_NUMBER__|${job_number}|g" | sed "s|__USER__|${PW_USER}|g") --job_number ${job_number}"
-parseArgs ${wfargs}
+# Load inputs
+source /etc/profile.d/parallelworks.sh
+source /etc/profile.d/parallelworks-env.sh
+source /pw/.miniconda3/etc/profile.d/conda.sh
+conda activate
 
-# Sets poolname, controller, pooltype and poolworkdir
-exportResourceInfo
-echo "Resource name:    ${poolname}"
-echo "Controller:       ${controller}"
-echo "Resource type:    ${pooltype}"
-echo "Resource workdir: ${poolworkdir}"
-echo
+python /pw/input_form_resource_wrapper.py
+source inputs.sh
+source resources/${rlabel}/inputs.sh
 
-wfargs="$(echo ${wfargs} | sed "s|__RESOURCE_WORKDIR__|${poolworkdir}|g")"
-wfargs="$(echo ${wfargs} | sed "s|--_pw_controller pw.conf|--_pw_controller ${controller}|g")"
+batch_header=resources/${rlabel}/batch_header.sh
 
-echo "$0 $wfargs"; echo
-parseArgs ${wfargs}
+sshcmd="ssh -o StrictHostKeyChecking=no ${resource_publicIp}"
 
-echo; echo "CREATING GENERAL SLURM HEADER"
-getBatchScriptHeader ofhost > slurm_directives.sh
-chmod +x slurm_directives.sh
-cat slurm_directives.sh
+openfoam_args=$(cat inputs.sh | grep openfoam_ | sed "s|export openfoam_|--|g" | tr '=' ' ')
+echo "OpenFOAM args: ${openfoam_args}"
+
+export remote_job_dir=${workdir}/${job_dir}
 
 echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
-sed -i "s|__controller__|${controller}|g" kill.sh
-sed -i "s|__job_number__|${job_number}|g" kill.sh
-
-sshcmd="ssh -o StrictHostKeyChecking=no ${controller}"
+sed -i "s|__controller__|${resource_publicIp}|g" kill.sh
+sed -i "s|__job_dir__|${job_dir}|g" kill.sh
 
 echo; echo "CHECKING OPENFOAM CASE"
-case_exists=$(${sshcmd} "[ -d '${openfoam_case}' ] && echo 'true' || echo 'false'")
+case_exists=$(${sshcmd} "[ -d '${openfoam_case_dir}' ] && echo 'true' || echo 'false'")
 
 if ! [[ "${case_exists}" == "true" ]]; then
-    echo "ERROR: Could find OpenFOAM case <${openfoam_case}> on remote host <${controller}>"
-    echo "Try: ${sshcmd} ls ${openfoam_case}"
+    echo "ERROR: Could find OpenFOAM case <${openfoam_case_dir}> on remote host <${resource_publicIp}>"
+    echo "Try: ${sshcmd} ls ${openfoam_case_dir}"
     exit 1
 fi
 
-echo; echo "PREPARING CONTROLLER NODE:"
-${sshcmd} mkdir -p ${jobdir}
-if [ -z "${load_openfoam}" ]; then
+echo; echo "PREPARING CONTROLLER NODE"
+${sshcmd} mkdir -p ${remote_job_dir}
+if [ -z "${openfoam_load_cmd}" ]; then
     # - Build singularity container if not present
-    cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${of_image}/g" > bootstrap/${of_image}.def
+    cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${openfoam_sing_image}/g" > bootstrap/${openfoam_sing_image}.def
     replace_templated_inputs bootstrap/bootstrap.sh ${wfargs}
-    scp -r bootstrap ${controller}:${jobdir}
-    ${sshcmd} bash ${jobdir}/bootstrap/bootstrap.sh > bootstrap.log 2>&1
+    scp -r bootstrap ${resource_publicIp}:${remote_job_dir}
+    ${sshcmd} bash ${remote_job_dir}/bootstrap/bootstrap.sh > resources/${rlabel}/singularity_bootstrap.log 2>&1
 fi
 
-cases_json_file=${openfoam_case}/cases.json
+cases_json_file=${openfoam_case_dir}/cases.json
 json_exists=$(${sshcmd} "[ -f '${cases_json_file}' ] && echo 'true' || echo 'false'")
 if [[ "${json_exists}" == "true" ]]; then
     echo; echo "CREATING OPENFOAM CASES"
@@ -64,14 +59,13 @@ if [[ "${json_exists}" == "true" ]]; then
     case_dirs=$(python3 -c "c=${cases_json}; [ print(case['directory']) for ci,case in enumerate(c['cases'])]")
     echo "  Creating run directories:" ${case_dirs}
     python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
-    scp create_cases.py ${controller}:${jobdir}
+    scp create_cases.py ${resource_publicIp}:${remote_job_dir}
     # Obtain and format OpenFOAM parameters from workflow input form
-    formparams=$(env | grep ofparam_ | sed "s|ofparam_|--|g" | sed "s|=| |g")
-    ${sshcmd} python3 ${jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${jobdir} ${formparams}
+    ${sshcmd} python3 ${remote_job_dir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${remote_job_dir} ${openfoam_args}
 else
     case_dirs="case"
-    echo; echo "Copying OpenFOAM case from <${openfoam_case}> to <${jobdir}/${case_dirs}>"
-    ${sshcmd} "cp -r ${openfoam_case} ${jobdir}/${case_dirs}"
+    echo; echo "Copying OpenFOAM case from <${openfoam_case_dir}> to <${remote_job_dir}/${case_dirs}>"
+    ${sshcmd} "cp -r ${openfoam_case_dir} ${remote_job_dir}/${case_dirs}"
 fi
 
 
@@ -81,33 +75,33 @@ for case_dir in ${case_dirs}; do
     # Case directory in user container
     mkdir -p ${PWD}/${case_dir}
     sbatch_sh=${PWD}/${case_dir}/sbatch.sh
-    chdir=${jobdir}/${case_dir}
+    chdir=${remote_job_dir}/${case_dir}
     # Create submit script
-    cp slurm_directives.sh ${sbatch_sh}
-    echo "#SBATCH -o ${chdir}/pw-${job_number}.out" >> ${sbatch_sh}
-    echo "#SBATCH -e ${chdir}/pw-${job_number}.out" >> ${sbatch_sh}
+    cp ${batch_header} ${sbatch_sh}
+    echo "#SBATCH -o ${chdir}/pw-${job_id}.out" >> ${sbatch_sh}
+    echo "#SBATCH -e ${chdir}/pw-${job_id}.out" >> ${sbatch_sh}
     echo "#SBATCH --chdir=${chdir}" >> ${sbatch_sh}
     echo "cd ${chdir}"              >> ${sbatch_sh}
     echo "touch case.foam"          >> ${sbatch_sh}
-    if [[ "${pooltype}" == "slurmshv2" ]]; then
+    if [[ "${resource_type}" == "slurmshv2" ]]; then
         echo "bash ${poolworkdir}/pw/.pw/remote.sh" >> ${sbatch_sh}
     fi
-    if [ -z "${load_openfoam}" ]; then
+    if [ -z "${openfoam_load_cmd}" ]; then
         bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
-        echo "singularity exec -B ${jobdir}/${case_dir}:${jobdir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
+        echo "singularity exec -B ${remote_job_dir}/${case_dir}:${remote_job_dir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
     else
-        echo "${load_openfoam}" | sed "s|___| |g" | tr ';' '\n' >> ${sbatch_sh}
+        echo "${openfoam_load_cmd}" | sed "s|___| |g" | tr ';' '\n' >> ${sbatch_sh}
         echo "/bin/bash ./Allrun"  >> ${sbatch_sh}
     fi
     cat ${sbatch_sh}
-    scp ${sbatch_sh} ${controller}:${jobdir}/${case_dir}
+    scp ${sbatch_sh} ${resource_publicIp}:${remote_job_dir}/${case_dir}
 done
 
 
 echo; echo "LAUNCHING JOBS"
 for case_dir in ${case_dirs}; do
     echo "  Case directory: ${case_dir}"
-    remote_sbatch_sh=${jobdir}/${case_dir}/sbatch.sh
+    remote_sbatch_sh=${remote_job_dir}/${case_dir}/sbatch.sh
     echo "  Running:"
     echo "    $sshcmd \"bash --login -c \\"sbatch ${remote_sbatch_sh}\\"\""
     slurm_job=$($sshcmd "bash --login -c \"sbatch ${remote_sbatch_sh}\"" | tail -1 | awk -F ' ' '{print $4}')
@@ -141,7 +135,7 @@ while true; do
             mv ${sj} ${sj}.completed
             sj_status=$($sshcmd sacct -j ${slurm_job}  --format=state | tail -n1 | tr -d ' ')
             case_dir=$(dirname ${sj} | sed "s|${PWD}/||g")
-            scp ${controller}: ${controller}:${jobdir}/${case_dir}/pw-${job_number}.out ${case_dir}
+            scp ${resource_publicIp}:${remote_job_dir}/${case_dir}/pw-${job_id}.out ${case_dir}
         fi
         echo "  Slurm job ${slurm_job} status is ${sj_status}"
         if [[ "${sj_status}" == "FAILED" ]]; then
