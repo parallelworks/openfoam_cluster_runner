@@ -1,24 +1,28 @@
 # OpenFOAM Runner
 
-Runs an OpenFOAM parameter sweep in a slurm cluster using a singularity container. The workflow requires an OpenFOAM case directory with templated input parameters and a JSON file defining the parameter value replacements for each case.
+The OpenFOAM-SLURM Workflow enables you to execute OpenFOAM cases on a SLURM cluster. To use this workflow effectively, please follow the instructions below:
 
-### 1. Workflow:
+1. Ensure that the OpenFOAM case directory is accessible within the cluster.
+2. Take advantage of the workflow's flexibility by utilizing the option to template the OpenFOAM parameters in the case directory. This feature allows you to perform parameter sweeps with custom parameter values.
+3. To define the various cases for the parameter sweep, create a JSON file called `cases.json` within the OpenFOAM case directory. This file will contain the necessary information to specify different cases and their corresponding parameter values.
+4. If no JSON file is defined, the workflow will execute the OpenFOAM case directlys. However, if a JSON file is present, a new case directory will be generated for each defined case in the JSON file. Additionally, a separate job will be submitted for each case, allowing for parallel execution and efficient use of the cluster's resources.
+5. For templated OpenFOAM cases, you have the flexibility to choose which parameters to expose as inputs in the workflow's input form. This user-friendly feature enables the creation of workflows that can be easily utilized by non-experts. By simply interacting with the input form, users can customize the simulation parameters without the need for direct modification of the JSON file or the OpenFOAM files. 
 
-The workflow performs the following tasks:
+### 1. Workflow Details
+The workflow encompasses the following tasks:
+1. Creation of the OpenFOAM case directory within the designated job directory on the cluster. This step involves either copying the original OpenFOAM case or, if the case is templated, generating the corresponding case directories by replacing the placeholders with the actual values in the OpenFOAM files.
+2. Generation of a SLURM batch script for each OpenFOAM case. These scripts are created in the `/pw/jobs/<job-number>/<case-name>/sbatch.sh` directory, utilizing the SLURM directives selected through the input form.
+3. Submission of each case to the job queue and subsequent waiting for the jobs to complete execution.
+4. Successful termination of the workflow if none of the jobs encounter any failures.
+5. In the event of the workflow job being cancelled on the PW platform, the workflow will cancel all associated SLURM jobs, ensuring proper cleanup and termination of ongoing simulations.
 
-1. Prepares the controller node: Installs singularity if it is not installed and builds the singularity container if no container exists in the specified path (see input form parameters > singularity container). Needs root access!
-2. Creates the OpenFOAM cases as defined in the case definition JSON file.
-3. Creates the slurm sbatch scripts using the slurm configuration parameters of the input form and the `Allrun` bash script in the templated OpenFOAM directory. The path to these batch scripts is `/pw/jobs/<job-number>/<case directory>/sbatch.sh`.
-4. Submits all the cases to the queue in parallel
-5. Streams the output from the remote job directory to the job directory in the user's account (`/pw/jobs/<job-number>/<case directory>`)
-6. Waits for the jobs to run
+By systematically carrying out these tasks, the workflow simplifies the execution of OpenFOAM cases on the cluster, making it accessible even to users without expertise in SLURM. The intuitive input form and automated generation of SLURM batch scripts alleviate the burden of manual configuration, enabling non-SLURM experts to effortlessly leverage the power of cluster computing. Additionally, the workflow's handling of job cancellations and potential failures ensures a smooth and reliable simulation process, providing a user-friendly experience for users of varying expertise levels.
 
-### 2. Templated OpenFOAM Directory:
+### 2. Templated OpenFOAM Directory
 
-The templated OpenFOAM directory must be located in a shared directory of the slurm cluster. To ilustrate the process of preparing the OpenFOAM case directory the `cyclone-template` sample is provided in this
-repository. This sample corresponds to a templated version of the official cyclone OpenFOAM tutorial.
+To ensure proper execution, the templated OpenFOAM directory must be located within the Slurm cluster environment. To facilitate the preparation of the OpenFOAM case directory, we have included two sample templates in this repository: `cyclone-template` from the OpenFOAM Foundation and `cyclone-template-esi` from OpenFOAM ESI. These samples serve as illustrations of a templated version of the official cyclone OpenFOAM tutorial. They can be used as references to understand the structure and configuration required for a successful workflow setup.
 
-#### 2.1 Templated Files:
+#### 2.1 Templated Files
 
 The following files have been edited to replace the default values by placeholders: `system/decomposeParDict`, `system/blockMeshDict` and `0/U.air`. For example, note that the `numberOfSubdomains` parameter in the `system/decomposeParDict` file below has been changed from `4` to `__numberOfSubdomains__` and the `n` parameter has been changed from `(2 2 1)` to `(__nx_ny_nz__)`:
 
@@ -52,7 +56,7 @@ simpleCoeffs
 
 #### 2.2 Case Definition JSON File
 
-The case definition JSON file must located in the templated OpenFOAM directory. This file defines a list of cases with the different parameter values for each placeholder following the format in file `cyclone-template/cyclone-cases.json`, partially pasted below:
+The `cases.json` file, which contains the case definitions, must be located within the templated OpenFOAM case directory. This file is responsible for defining a list of cases with their respective parameter values for each placeholder. To assist you in understanding the required format, we have provided an example in the cyclone-template/cases.json file, shown partially below:
 
 ```
 {
@@ -78,26 +82,32 @@ The case definition JSON file must located in the templated OpenFOAM directory. 
 
 Note that for every case the following keywords are defined:
 
-1. `directory`: Name of the case directory. The templated OpenFOAM directory is copied to this directory. The path to this directory is relative to the job directory in the remote machine (see input form parameters > job directory)
-2. `files`: A list of templated files with their paths and parameters specified with the `path` and `parameters` keys, respectively. The parameters are specified as a list of dictorionaries defining the parameter placeholder and its corresponding value. This tells the workflow to replace every instance of `__numberOfSubdomains__` in file `case_1/system/decomposeParDict` with the value `4`.
+Please take note of the following key details for each case:
+
+1. `directory`: This specifies the name of the case directory. The templated OpenFOAM directory will be copied to this directory. The path to this directory is relative to the job directory on the remote machine (refer to the input form parameters > job directory section for more details).
+
+2. `files`: This is a list of templated files along with their paths and parameters. Each file is defined with the path and parameters keys. The parameters are specified as a list of dictionaries, where each dictionary defines a parameter placeholder and its corresponding value. For example, using the provided configuration, the workflow will replace every occurrence of `__numberOfSubdomains__` in the file `case_1/system/decomposeParDict` with the value `4`.
 
 #### 2.3 Allrun File
-
-A bash script named `Allrun` must be located in the templated OpenFOAM directory. The workflow calls this file from the sbatch slurm script. Make sure you load the OpenFOAM environment in the script, e.g:
+Ensure that a bash script named `Allrun` is present within the templated OpenFOAM directory. This script is executed from SLURM sbatch scripts. It is essential to load the OpenFOAM environment within the Allrun script (spack load, module load, source /path/to/bashrc , etc). Here's an example of how to accomplish this:
 
 ```
 source /opt/openfoam9/etc/bashrc
 ```
 
 ### 3. Input Form Parameters
+Hover over the parameters in the input form for additional information and guidance. The input form provides the option to expose placeholders defined in the cases.json file. These placeholders take precedence over the parameter values defined in the JSON file and are used to directly replace the placeholders within the OpenFOAM input files.
 
-Hover over the parameters in the input form for further information.
+Additionally, the input form allows you to expose any SLURM directive, which will be incorporated into the generated sbatch scripts for each OpenFOAM case.
 
-### 4. Logs:
+By leveraging the flexibility of the input form, you can conveniently customize the OpenFOAm and SLURM parameter values for your simulations. The workflow dynamically applies these values to the appropriate locations, ensuring accurate and tailored simulations across multiple OpenFOAM cases. This user-friendly approach simplifies the configuration process, allowing users of varying expertise levels to effortlessly harness the capabilities of the workflow.
 
-Logs are located in the `/pw/jobs/<job-number> directory`:
+### 4. Logs
+
+Logs are located in the `/pw/jobs/<job-number>` directory:
 
 1. `std.out`: Workflow standard output
 2. `std.err`: Workflow standard error
-3. `bootstrap.log`: Bootstrap standard output and error
-4. `<case-dir>/pw-<job-number>.out`: Slurm job standard output and error for each case
+3. `<case-dir>/pw-<job-number>.out`: Slurm job standard output and error for each case
+
+And in the corresponding job directory in the cluster.
