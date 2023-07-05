@@ -8,7 +8,7 @@
         <param name='__numberOfSubdomains__' label='Number of Subdomains' type='integer' min="1" max="120" help='OpenFOAM parameter numberOfSubdomains in the system/decomposeParDict file' value='60' width='50%'></param>
         <param name='__nx_ny_nz__' label='Coefficients to Split Mesh in the x, y and z Directions' type='text' value='6 5 2' help='OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains' width='50%'></param>
    </section>
-    <section name='pwrl_ofhost' type='section' title='OpenFOAM Executor' expanded='true'>
+    <section name='pwrl_ofhost' type='section' title='Executor' expanded='true'>
       <param name='resource' type='computeResource' label='Service host' hideUserWorkspace='true' help='Resource to host the service'></param>
       <param name='jobschedulertype' label='Select Controller, SLURM Partition or PBS Queue' type='hidden' value='SLURM' width='100%_none'></param>
       <param name='_sch__dd_partition_e_' label='Slurm Partition' type='text' help='Name of the SLURM partition to run the OpenFOAM cases' value='normal' width='50%_none'></param>

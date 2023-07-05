@@ -6,7 +6,7 @@
         <param name='case_dir' label='OpenFOAM Case Directory' type='text' value='/home/atnorth/pw/openfoam/cyclone-esi-template/' help='Full path to OpenFOAM case directory' width='100%_none'></param>
         <param name='load_cmd' label='Command to Load OpenFOAM' type='text' value='spack load openfoam@2206; module load gnu12/12.2.0 openmpi4/4.1.4' help='E.g.: module load, spack load, source, export PATH=, etc' width='100%_none'></param>
    </section>
-   <section name='pwrl_ofhost' type='section' title='OpenFOAM Executor' expanded='true'>
+   <section name='pwrl_ofhost' type='section' title='Executor' expanded='true'>
       <param name='resource' type='computeResource' label='Service host' hideUserWorkspace='true' help='Resource to host the service'></param>
       <param name='jobschedulertype' label='Select Controller, SLURM Partition or PBS Queue' type='hidden' value='SLURM' width='100%_none'></param>
       <param name='_sch__dd_partition_e_' label='Slurm Partition' type='text' help='Name of the SLURM partition to run the OpenFOAM cases' value='normal' width='50%_none'></param>
