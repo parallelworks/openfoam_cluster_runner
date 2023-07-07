@@ -5,7 +5,7 @@ The OpenFOAM-SLURM Workflow enables you to execute OpenFOAM cases on a SLURM clu
 1. Ensure that the OpenFOAM case directory is accessible within the cluster.
 2. Take advantage of the workflow's flexibility by utilizing the option to template the OpenFOAM parameters in the case directory. This feature allows you to perform parameter sweeps with custom parameter values.
 3. To define the various cases for the parameter sweep, create a JSON file called `cases.json` within the OpenFOAM case directory. This file will contain the necessary information to specify different cases and their corresponding parameter values.
-4. If no JSON file is defined, the workflow will execute the OpenFOAM case directlys. However, if a JSON file is present, a new case directory will be generated for each defined case in the JSON file. Additionally, a separate job will be submitted for each case, allowing for parallel execution and efficient use of the cluster's resources.
+4. If no JSON file is defined, the workflow will execute the OpenFOAM case directly. However, if a JSON file is present, a new case directory will be generated for each defined case in the JSON file. Additionally, a separate job will be submitted for each case, allowing for parallel execution and efficient use of the cluster's resources.
 5. For templated OpenFOAM cases, you have the flexibility to choose which parameters to expose as inputs in the workflow's input form. This user-friendly feature enables the creation of workflows that can be easily utilized by non-experts. By simply interacting with the input form, users can customize the simulation parameters without the need for direct modification of the JSON file or the OpenFOAM files. 
 
 ### 1. Workflow Details
