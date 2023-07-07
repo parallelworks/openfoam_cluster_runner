@@ -81,9 +81,6 @@ The `cases.json` file, which contains the case definitions, must be located with
 ```
 
 Note that for every case the following keywords are defined:
-
-Please take note of the following key details for each case:
-
 1. `directory`: This specifies the name of the case directory. The templated OpenFOAM directory will be copied to this directory. The path to this directory is relative to the job directory on the remote machine (refer to the input form parameters > job directory section for more details).
 
 2. `files`: This is a list of templated files along with their paths and parameters. Each file is defined with the path and parameters keys. The parameters are specified as a list of dictionaries, where each dictionary defines a parameter placeholder and its corresponding value. For example, using the provided configuration, the workflow will replace every occurrence of `__numberOfSubdomains__` in the file `case_1/system/decomposeParDict` with the value `4`.
