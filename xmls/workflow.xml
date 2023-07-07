@@ -10,7 +10,7 @@
       <param name='resource' type='computeResource' label='Service host' hideUserWorkspace='true' help='Resource to host the service'></param>
       <param name='jobschedulertype' label='Select Controller, SLURM Partition or PBS Queue' type='hidden' value='SLURM' width='100%_none'></param>
       <param name='_sch__dd_partition_e_' label='Slurm Partition' type='text' help='Name of the SLURM partition to run the OpenFOAM cases' value='normal' width='50%_none'></param>
-      <param name='_sch__dd_ntasks_d_per_d_node_e_' label='Tasks per Node' type='integer' min="1" max="64" help='--ntasks-per-node=value slurm directive' value='60' width='50%_none'></param>
+      <param name='_sch__dd_ntasks_d_per_d_node_e_' label='Tasks per Node' type='integer' min="1" max="64" help='--ntasks-per-node=value slurm directive' value='64' width='50%_none'></param>
       <param name='_sch__dd_nodes_e_' label='Number of Nodes' type='integer' min="1" max="2" help='--nodes=value slurm directive' value='1' width='50%_none'></param>
       <param name='_sch__dd_time_e_' label='Walltime' type='text' help='Maximum walltime per OpenFOAM case' value='02:00:00' width='50%_none'></param>
       <param name='scheduler_directives' label='Scheduler Directives' type='text' help='e.g. --mem=1000;--gpus-per-node=1 - Use the semicolon character ; to separate parameters. Do not include the SBATCH keyword.' value='' width='100%_none'></param>
