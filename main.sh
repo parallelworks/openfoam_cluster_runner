@@ -37,7 +37,7 @@ echo; echo "CHECKING OPENFOAM CASE"
 case_exists=$(${sshcmd} "[ -d '${openfoam_case_dir}' ] && echo 'true' || echo 'false'")
 
 if ! [[ "${case_exists}" == "true" ]]; then
-    echo "ERROR: Could find OpenFOAM case <${openfoam_case_dir}> on remote host <${resource_publicIp}>"
+    echo "ERROR: Could find OpenFOAM case [${openfoam_case_dir}] on remote host [${resource_publicIp}]"
     echo "Try: ${sshcmd} ls ${openfoam_case_dir}"
     exit 1
 fi
@@ -66,7 +66,7 @@ if [[ "${json_exists}" == "true" ]]; then
     ${sshcmd} python3 ${remote_job_dir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${remote_job_dir} ${openfoam_args}
 else
     case_dirs="case"
-    echo; echo "Copying OpenFOAM case from <${openfoam_case_dir}> to <${remote_job_dir}/${case_dirs}>"
+    echo; echo "Copying OpenFOAM case from [${openfoam_case_dir}] to [${remote_job_dir}/${case_dirs}]"
     ${sshcmd} "cp -r ${openfoam_case_dir} ${remote_job_dir}/${case_dirs}"
 fi
 
@@ -123,10 +123,10 @@ while true; do
 
     if [ -z "${submitted_jobs}" ]; then
         if [[ "${FAILED}" == "true" ]]; then
-            echo "ERROR: Jobs <${FAILED_JOBS}> failed"
+            echo "ERROR: Jobs [${FAILED_JOBS}] failed"
             exit 1
         fi
-        echo "  All jobs are completed. Please check job logs in directories <" ${case_dirs} "> and results"
+        echo "  All jobs are completed. Please check job logs in directories [${case_dirs}] and results"
         exit 0
     fi
 
