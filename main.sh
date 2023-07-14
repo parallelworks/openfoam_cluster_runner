@@ -86,7 +86,7 @@ for case_dir in ${case_dirs}; do
     echo "cd ${chdir}"              >> ${sbatch_sh}
     echo "touch case.foam"          >> ${sbatch_sh}
     if [[ "${resource_type}" == "slurmshv2" ]]; then
-        echo "bash ${resource_workdir}/pw/.pw/remote.sh" >> ${sbatch_sh}
+        echo "bash ${resource_workdir}/pw/.pw/remote.sh &> /tmp/remote-sh-${RANDOM}.out" >> ${sbatch_sh}
     fi
     if [ -z "${openfoam_load_cmd}" ]; then
         bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
