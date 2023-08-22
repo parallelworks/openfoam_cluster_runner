@@ -47,8 +47,9 @@ echo "${sshcmd} mkdir -p ${remote_job_dir}"
 ${sshcmd} mkdir -p ${remote_job_dir}
 if [ -z "${openfoam_load_cmd}" ]; then
     # - Build singularity container if not present
-    cat  bootstrap/openfoam-template.def | sed "s/__of_image__/${openfoam_sing_image}/g" > bootstrap/${openfoam_sing_image}.def
-    replace_templated_inputs bootstrap/bootstrap.sh ${wfargs}
+    cat  bootstrap/openfoam-template.def | sed "s/__openfoam_image__/${openfoam_image}/g" > bootstrap/${openfoam_sing_image}.def
+    cat inputs.sh | grep openfoam_ > bootstrap/bootstrap.sh
+    cat bootstrap/bootstrap_template.sh >> bootstrap/bootstrap.sh 
     scp -r bootstrap ${resource_publicIp}:${remote_job_dir}
     ${sshcmd} bash ${remote_job_dir}/bootstrap/bootstrap.sh > resources/${rlabel}/singularity_bootstrap.log 2>&1
 fi
@@ -90,7 +91,7 @@ for case_dir in ${case_dirs}; do
     fi
     if [ -z "${openfoam_load_cmd}" ]; then
         bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
-        echo "singularity exec -B ${remote_job_dir}/${case_dir}:${remote_job_dir}/${case_dir} ${sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
+        echo "singularity exec -B ${remote_job_dir}/${case_dir}:${remote_job_dir}/${case_dir} ${openfoam_sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
     else
         echo "${openfoam_load_cmd}" | sed "s|___| |g" | tr ';' '\n' >> ${sbatch_sh}
         echo "/bin/bash ./Allrun"  >> ${sbatch_sh}
