@@ -7,8 +7,8 @@ export job_id=$(echo ${job_dir} | tr '/' '-')
 
 echo; echo "LOADING AND PREPARING INPUTS"
 # Overwrite input form and resource definition page defaults
-sed -i "s|__USER__|${PW_USER}|g" inputs.sh
-sed -i "s|__USER__|${PW_USER}|g" inputs.json
+sed -i "s|__PW_USER__|${PW_USER}|g" inputs.sh
+sed -i "s|__PW_USER__|${PW_USER}|g" inputs.json
 
 # Load inputs
 source /etc/profile.d/parallelworks.sh
