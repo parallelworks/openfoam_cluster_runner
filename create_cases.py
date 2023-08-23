@@ -41,7 +41,7 @@ if __name__ == '__main__':
                 value = str(param['value'])
                 if placeholder in args:
                     value = args[placeholder].replace('___', ' ')
-                    case['files'][fi]['parameters'][pi]['placeholder'] = value
+                    case['files'][fi]['parameters'][pi]['value'] = value
                 print('      Replacing placeholder <{}> with value <{}>'.format(placeholder, value))
                 ftext = ftext.replace(placeholder, value)
 
