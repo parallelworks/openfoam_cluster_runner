@@ -6,9 +6,6 @@ export job_dir=$(pwd | rev | cut -d'/' -f1-2 | rev)
 export job_id=$(echo ${job_dir} | tr '/' '-')
 
 echo; echo "LOADING AND PREPARING INPUTS"
-# Overwrite input form and resource definition page defaults
-sed -i "s|__PW_USER__|${PW_USER}|g" inputs.sh
-sed -i "s|__PW_USER__|${PW_USER}|g" inputs.json
 
 # Load inputs
 source /etc/profile.d/parallelworks.sh
@@ -18,15 +15,6 @@ conda activate
 
 python /swift-pw-bin/utils/input_form_resource_wrapper.py
 source resources/${rlabel}/inputs.sh
-sed -i "s|__WORKDIR__|${workdir}|g" inputs.sh
-sed -i "s|__workdir__|${workdir}|g" inputs.sh
-sed -i "s|__USER__|${resource_username}|g" inputs.sh
-sed -i "s|__user__|${resource_username}|g" inputs.sh
-sed -i "s|__WORKDIR__|${workdir}|g" inputs.json
-sed -i "s|__workdir__|${workdir}|g" inputs.json
-sed -i "s|__USER__|${resource_username}|g" inputs.json
-sed -i "s|__user__|${resource_username}|g" inputs.json
-source inputs.sh
 
 batch_header=resources/${rlabel}/batch_header.sh
 
