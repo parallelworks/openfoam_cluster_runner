@@ -20,7 +20,7 @@ batch_header=resources/${rlabel}/batch_header.sh
 
 sshcmd="ssh -o StrictHostKeyChecking=no ${resource_publicIp}"
 
-openfoam_args=$(cat inputs.sh | grep openfoam_ | sed "s|export openfoam_|--|g" | tr '=' ' ')
+openfoam_args=$(cat resources/${rlabel}/inputs.sh | grep openfoam_ | sed "s|export openfoam_|--|g" | tr '=' ' ')
 echo "OpenFOAM args: ${openfoam_args}"
 
 echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
@@ -43,7 +43,7 @@ if [ -z "${openfoam_load_cmd}" ]; then
     echo "Build singularity container if not present"
     set -x
     cat  bootstrap/openfoam-template.def | sed "s/__openfoam_image__/${openfoam_image}/g" > bootstrap/${openfoam_image}.def
-    cat inputs.sh | grep openfoam_ > bootstrap/bootstrap.sh
+    cat resources/${rlabel}/inputs.sh | grep openfoam_ > bootstrap/bootstrap.sh
     cat bootstrap/bootstrap_template.sh >> bootstrap/bootstrap.sh 
     scp -r bootstrap ${resource_publicIp}:${resource_jobdir}
     ${sshcmd} bash ${resource_jobdir}/bootstrap/bootstrap.sh > resources/${rlabel}/singularity_bootstrap.log 2>&1
