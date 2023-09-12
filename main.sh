@@ -20,7 +20,8 @@ batch_header=resources/${rlabel}/batch_header.sh
 
 sshcmd="ssh -o StrictHostKeyChecking=no ${resource_publicIp}"
 
-openfoam_args=$(cat resources/${rlabel}/inputs.sh | grep openfoam_ | sed "s|export openfoam_|--|g" | tr '=' ' ')
+# FIXME: Improve the tag of the openfoam parameters (openfoam_)
+openfoam_args=$(cat resources/${rlabel}/inputs.sh | grep openfoam_ | grep -v resource_ | sed "s|export openfoam_|--|g" | tr '=' ' ')
 echo "OpenFOAM args: ${openfoam_args}"
 
 echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
