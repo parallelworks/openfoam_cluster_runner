@@ -25,14 +25,13 @@ if __name__ == '__main__':
 
     for ci,case in enumerate(cases['cases']):
         print('\nGenerating case {}'.format(ci+1))
+        print(json.dumps(case, indent = 4))
         print('  Copying template directory <{template_dir}> to case directory <{case_dir}>'.format(
             template_dir = os.path.expanduser(template_directory),
             case_dir = case['directory']
         ))
         shutil.copytree(os.path.expanduser(template_directory), case['directory'])
-
         for fi,fdict in enumerate(case['files']):
-            print(json.dumps(case, indent = 4))
             print('    Rewriting file {}'.format(fdict['path']))
             f = open(os.path.join(case['directory'], fdict['path']), mode='r')
             ftext = f.read()
@@ -42,7 +41,7 @@ if __name__ == '__main__':
                 value = str(param['value'])
                 if placeholder in args:
                     value = args[placeholder].replace('___', ' ')
-                    case['files'][fi]['parameters'][pi]['placeholder'] = value
+                    case['files'][fi]['parameters'][pi]['value'] = value
                 print('      Replacing placeholder <{}> with value <{}>'.format(placeholder, value))
                 ftext = ftext.replace(placeholder, value)
 

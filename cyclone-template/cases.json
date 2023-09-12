@@ -21,7 +21,7 @@
                     "path": "system/blockMeshDict",
                     "parameters": [
                         {
-                            "placeholder": "__nx_ny_nz__",
+                            "placeholder": "__block_nx_ny_nz__",
                             "value": "33 33 63"
                         }
 
@@ -60,7 +60,7 @@
                     "path": "system/blockMeshDict",
                     "parameters": [
                         {
-                            "placeholder": "__nx_ny_nz__",
+                            "placeholder": "__block_nx_ny_nz__",
                             "value": "33 33 63"
                         }
 
