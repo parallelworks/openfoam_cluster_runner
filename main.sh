@@ -116,7 +116,11 @@ for case_dir in ${case_dirs}; do
     remote_submit_job_sh=${resource_jobdir}/${case_dir}/submit_job.sh
     echo "  Running:"
     echo "    $sshcmd \"bash --login -c \\"${submit_cmd} ${remote_submit_job_sh}\\"\""
-    slurm_job=$($sshcmd "bash --login -c \"${submit_cmd} ${remote_submit_job_sh}\"" | tail -1 | awk -F ' ' '{print $4}')
+    if [[ ${jobschedulertype} == "SLURM" ]]; then 
+        slurm_job=$($sshcmd "bash --login -c \"${submit_cmd} ${remote_submit_job_sh}\"" | tail -1 | awk -F ' ' '{print $4}')
+    elif [[ ${jobschedulertype} == "PBS" ]]; then
+        slurm_job=$($sshcmd "bash --login -c \"${submit_cmd} ${remote_submit_job_sh}\"" | tail -1)
+    fi
     if [ -z "${slurm_job}" ]; then
         echo "    ERROR submitting job - exiting the workflow"
         exit 1
