@@ -65,6 +65,7 @@ if [[ "${json_exists}" == "true" ]]; then
     {
         ${sshcmd} python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}    
     } || {
+        echo; echo;
         echo "ERROR: The command below failed. Make sure python3 is in the remote PATH!"
         echo "${sshcmd} python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}"
         exit 1
