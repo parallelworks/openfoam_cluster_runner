@@ -59,7 +59,7 @@
             width='50%_none' 
             multiple='false'
           >
-            <option value="SLURM">SLURM Partition</option>
+            <option value="SLURM"  selected="true">SLURM Partition</option>
             <option value="PBS">PBS Queue</option>
         </param>
         <when value="SLURM">
