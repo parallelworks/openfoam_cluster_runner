@@ -14,7 +14,7 @@
           name='load_cmd' 
           label='Command to Load OpenFOAM' 
           type='text' 
-          value='spack load openfoam-org@7; module load gnu12/12.2.0 openmpi4/4.1.4' 
+          value='module load OpenFoam/8' 
           help='E.g.: module load, spack load, source, export PATH=, etc'
         ></param>
         <param 
@@ -24,14 +24,14 @@
           min="1" 
           max="128" 
           help='OpenFOAM parameter numberOfSubdomains in the system/decomposeParDict file' 
-          value='64' 
-          width='50%'>
+          value='2' 
+        >
         </param>
         <param 
           name='__nx_ny_nz__' 
           label='Coefficients to Split Mesh in the x, y and z Directions' 
           type='text' 
-          value='8 8 2' 
+          value='2 1 1' 
           help='OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains'>
         </param>
    </section>
@@ -48,7 +48,7 @@
         label='Select Controller, SLURM Partition or PBS Queue' 
         type='hidden' 
         value='SLURM' 
-        width='100%_none'>
+      >
       </param>
       <conditional name="jobschedulertype_cond">
           <param 
@@ -56,7 +56,6 @@
             type='select' 
             label='Select SLURM Partition or PBS Queue' 
             help='Job will submitted using SSH, sbatch or qsub, respectively' 
-            width='50%_none' 
             multiple='false'
           >
             <option value="SLURM"  selected="true">SLURM Partition</option>
