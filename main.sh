@@ -136,6 +136,7 @@ while true; do
     for sj in ${submitted_jobs}; do
         jobid=$(cat ${sj})
         get_job_status
+        echo "  Status of job ${jobid} is ${job_status}"
         if [[ $? -eq 1 ]]; then
             # Job completed
             mv ${sj} ${sj}.completed
