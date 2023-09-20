@@ -147,14 +147,14 @@ while true; do
     for sj in ${submitted_jobs}; do
         jobid=$(cat ${sj})
         get_job_status
+        job_status_ec=$?
         echo "  Status of job ${jobid} is ${job_status}"
-        if [[ $? -eq 1 ]]; then
+        if [[ ${job_status_ec} -eq 1 ]]; then
             # Job completed
             mv ${sj} ${sj}.completed
-            sj_status=$($sshcmd sacct -j ${slurm_job}  --format=state | tail -n1 | tr -d ' ')
             case_dir=$(dirname ${sj} | sed "s|${PWD}/||g")
             scp ${resource_publicIp}:${resource_jobdir}/${case_dir}/pw-${job_id}.out ${case_dir}
-        elif [[ $? -eq 2 ]]; then
+        elif [[ ${job_status_ec} -eq 2 ]]; then
             # Job failed
             FAILED=true
             FAILED_JOBS="${slurm_job}, ${FAILED_JOBS}"
