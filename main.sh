@@ -14,6 +14,7 @@ source /pw/.miniconda3/etc/profile.d/conda.sh
 conda activate
 
 python /swift-pw-bin/utils/input_form_resource_wrapper.py
+source utils/workflow-libs.sh
 source resources/${rlabel}/inputs.sh
 
 batch_header=resources/${rlabel}/batch_header.sh
@@ -61,7 +62,14 @@ if [[ "${json_exists}" == "true" ]]; then
     python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
     scp create_cases.py ${resource_publicIp}:${resource_jobdir}
     # Obtain and format OpenFOAM parameters from workflow input form
-    ${sshcmd} python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}
+    {
+        ${sshcmd} python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}    
+    } || {
+        echo; echo;
+        echo "ERROR: The command below failed. Make sure python3 is in the remote PATH!"
+        echo "${sshcmd} python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}"
+        exit 1
+    }
 else
     case_dirs="case"
     echo; echo "Copying OpenFOAM case from [${openfoam_case_dir}] to [${resource_jobdir}/${case_dirs}]"
@@ -74,37 +82,45 @@ for case_dir in ${case_dirs}; do
     echo "  Case directory: ${case_dir}"
     # Case directory in user container
     mkdir -p ${PWD}/${case_dir}
-    sbatch_sh=${PWD}/${case_dir}/sbatch.sh
+    submit_job_sh=${PWD}/${case_dir}/submit_job.sh
     chdir=${resource_jobdir}/${case_dir}
     # Create submit script
-    cp ${batch_header} ${sbatch_sh}
-    echo "#SBATCH -o ${chdir}/pw-${job_id}.out" >> ${sbatch_sh}
-    echo "#SBATCH -e ${chdir}/pw-${job_id}.out" >> ${sbatch_sh}
-    echo "#SBATCH --chdir=${chdir}" >> ${sbatch_sh}
-    echo "cd ${chdir}"              >> ${sbatch_sh}
-    echo "touch case.foam"          >> ${sbatch_sh}
+    cp ${batch_header} ${submit_job_sh}
+    if [[ ${jobschedulertype} == "SLURM" ]]; then 
+        echo "#SBATCH -o ${chdir}/pw-${job_id}.out" >> ${submit_job_sh}
+        echo "#SBATCH -e ${chdir}/pw-${job_id}.out" >> ${submit_job_sh}
+    elif [[ ${jobschedulertype} == "PBS" ]]; then
+        echo "#PBS -o ${chdir}/pw-${job_id}.out" >> ${submit_job_sh}
+        echo "#PBS -e ${chdir}/pw-${job_id}.out" >> ${submit_job_sh}
+    fi
+    echo "cd ${chdir}"              >> ${submit_job_sh}
+    echo "touch case.foam"          >> ${submit_job_sh}
     if [[ "${resource_type}" == "slurmshv2" ]]; then
-        echo "bash ${resource_workdir}/pw/.pw/remote.sh &> /tmp/remote-sh-${RANDOM}.out" >> ${sbatch_sh}
+        echo "bash ${resource_workdir}/pw/.pw/remote.sh &> /tmp/remote-sh-${RANDOM}.out" >> ${submit_job_sh}
     fi
     if [ -z "${openfoam_load_cmd}" ]; then
-        bash utils/create_singularity_wrapper.sh ${sbatch_sh} ${case_dir}
-        echo "singularity exec -B ${resource_jobdir}/${case_dir}:${resource_jobdir}/${case_dir} ${openfoam_sif_file} /bin/bash ./Allrun" >> ${sbatch_sh}
+        bash utils/create_singularity_wrapper.sh ${submit_job_sh} ${case_dir}
+        echo "singularity exec -B ${resource_jobdir}/${case_dir}:${resource_jobdir}/${case_dir} ${openfoam_sif_file} /bin/bash ./Allrun" >> ${submit_job_sh}
     else
-        echo "${openfoam_load_cmd}" | sed "s|___| |g" | tr ';' '\n' >> ${sbatch_sh}
-        echo "/bin/bash ./Allrun"  >> ${sbatch_sh}
+        echo "${openfoam_load_cmd}" | sed "s|___| |g" | tr ';' '\n' >> ${submit_job_sh}
+        echo "/bin/bash ./Allrun"  >> ${submit_job_sh}
     fi
-    cat ${sbatch_sh}
-    scp ${sbatch_sh} ${resource_publicIp}:${resource_jobdir}/${case_dir}
+    cat ${submit_job_sh}
+    scp ${submit_job_sh} ${resource_publicIp}:${resource_jobdir}/${case_dir}
 done
 
 
 echo; echo "LAUNCHING JOBS"
 for case_dir in ${case_dirs}; do
     echo "  Case directory: ${case_dir}"
-    remote_sbatch_sh=${resource_jobdir}/${case_dir}/sbatch.sh
+    remote_submit_job_sh=${resource_jobdir}/${case_dir}/submit_job.sh
     echo "  Running:"
-    echo "    $sshcmd \"bash --login -c \\"sbatch ${remote_sbatch_sh}\\"\""
-    slurm_job=$($sshcmd "bash --login -c \"sbatch ${remote_sbatch_sh}\"" | tail -1 | awk -F ' ' '{print $4}')
+    echo "    $sshcmd \"bash --login -c \\"${submit_cmd} ${remote_submit_job_sh}\\"\""
+    if [[ ${jobschedulertype} == "SLURM" ]]; then 
+        slurm_job=$($sshcmd "bash --login -c \"${submit_cmd} ${remote_submit_job_sh}\"" | tail -1 | awk -F ' ' '{print $4}')
+    elif [[ ${jobschedulertype} == "PBS" ]]; then
+        slurm_job=$($sshcmd "bash --login -c \"${submit_cmd} ${remote_submit_job_sh}\"" | tail -1)
+    fi
     if [ -z "${slurm_job}" ]; then
         echo "    ERROR submitting job - exiting the workflow"
         exit 1
@@ -129,16 +145,17 @@ while true; do
     fi
 
     for sj in ${submitted_jobs}; do
-        slurm_job=$(cat ${sj})
-        sj_status=$($sshcmd squeue -j ${slurm_job} | tail -n+2 | awk '{print $5}')
-        if [ -z "${sj_status}" ]; then
+        jobid=$(cat ${sj})
+        get_job_status
+        job_status_ec=$?
+        echo "  Status of job ${jobid} is ${job_status}"
+        if [[ ${job_status_ec} -eq 1 ]]; then
+            # Job completed
             mv ${sj} ${sj}.completed
-            sj_status=$($sshcmd sacct -j ${slurm_job}  --format=state | tail -n1 | tr -d ' ')
             case_dir=$(dirname ${sj} | sed "s|${PWD}/||g")
             scp ${resource_publicIp}:${resource_jobdir}/${case_dir}/pw-${job_id}.out ${case_dir}
-        fi
-        echo "  Slurm job ${slurm_job} status is ${sj_status}"
-        if [[ "${sj_status}" == "FAILED" ]]; then
+        elif [[ ${job_status_ec} -eq 2 ]]; then
+            # Job failed
             FAILED=true
             FAILED_JOBS="${slurm_job}, ${FAILED_JOBS}"
         fi
