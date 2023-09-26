@@ -1,0 +1,133 @@
+<tool id='NA' name='NA'>
+  <command interpreter='bash'>main.sh</command>
+  <cancel interpreter='bash'>kill.sh</cancel>
+  <inputs>
+   <section name='openfoam' type='section' title='OpenFOAM' expanded='true'>
+        <param 
+          name='case_dir' 
+          label='OpenFOAM Case Directory' 
+          type='text' 
+          value='__WORKDIR__/pw/openfoam/cyclone-template/' 
+          help='Full path to OpenFOAM case directory'
+        ></param>
+        <param 
+          name='load_cmd' 
+          label='Command to Load OpenFOAM' 
+          type='text' 
+          value='module load OpenFoam/10' 
+          help='E.g.: module load, spack load, source, export PATH=, etc'
+        ></param>
+        <param 
+          name='__numberOfSubdomains__' 
+          label='Number of Subdomains' 
+          type='integer' 
+          min="1" 
+          max="128" 
+          help='OpenFOAM parameter numberOfSubdomains in the system/decomposeParDict file' 
+          value='4' 
+        >
+        </param>
+        <param 
+          name='__nx_ny_nz__' 
+          label='Coefficients to Split Mesh in the x, y and z Directions' 
+          type='text' 
+          value='2 2 1' 
+          help='OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains'>
+        </param>
+   </section>
+   <section name='pwrl_ofhost' type='section' title='Executor' expanded='true'>
+      <param 
+        name='resource' 
+        type='computeResource' 
+        label='Service host' 
+        hideUserWorkspace='true' 
+        help='Resource to host the service'>
+      </param>
+      <param 
+        name='jobschedulertype' 
+        label='Select Controller, SLURM Partition or PBS Queue' 
+        type='hidden' 
+        value='SLURM' 
+      >
+      </param>
+      <conditional name="jobschedulertype_cond">
+          <param 
+            name='jobschedulertype' 
+            type='select' 
+            label='Select SLURM Partition or PBS Queue' 
+            help='Job will submitted using SSH, sbatch or qsub, respectively' 
+            multiple='false'
+          >
+            <option value="SLURM" >SLURM Partition</option>
+            <option value="PBS"  selected="true">PBS Queue</option>
+        </param>
+        <when value="SLURM">
+            <param 
+              name='_sch__dd_partition_e_' 
+              label='Slurm Partition' 
+              type='text' 
+              help='Name of the SLURM partition to run the OpenFOAM cases' 
+              value=''
+            ></param>
+            <param 
+              name='_sch__dd_ntasks_d_per_d_node_e_' 
+              label='Tasks per Node' 
+              type='integer' 
+              min="1" 
+              max="64" 
+              help='--ntasks-per-node=value slurm directive' 
+              value='2'
+            ></param>
+            <param 
+              name='_sch__dd_nodes_e_' 
+              label='Number of Nodes' 
+              type='integer' 
+              min="1" 
+              max="2" 
+              help='--nodes=value slurm directive' 
+              value='1'
+            ></param>
+            <param 
+              name='_sch__dd_time_e_' 
+              label='Walltime' 
+              type='text' 
+              help='Maximum walltime per OpenFOAM case' 
+              value='02:00:00'
+            ></param>
+            <param 
+              name='scheduler_directives' 
+              label='Scheduler directives' 
+              type='text' 
+              help='e.g. --mem=1000;--gpus-per-node=1 - Use the semicolon character ; to separate parameters. Do not include the SBATCH keyword.' 
+              value='' 
+            ></param>
+        </when>
+        <when value="PBS">
+            <param 
+              name='_sch__d_q___' 
+              label='PBS queue' 
+              type='text' 
+              help='Queue to submit the interactive job. Must select one! Use [qstat -f -Q] to list all queues on the system' 
+              value='B30'
+            ></param>
+            <param 
+              name='scheduler_directives' 
+              label='Scheduler directives' 
+              type='text' 
+              help='e.g. -l mem=1000;-l nodes=1:ppn=4 - Use the semicolon character ; to separate parameters. Do not include the PBS keyword.' 
+              value='-l walltime=02:30:00;-l nodes=1:ppn=4'
+            ></param>
+        </when>
+      </conditional>
+      <param 
+        name='workdir' 
+        label='Shared Work Directory' 
+        type='text' 
+        help='This directory must be shared between the compute and login nodes. This parameter overwrites the working directory in the resource definition page' 
+        value='__WORKDIR__'
+      ></param>
+  </section>
+  </inputs>
+  <outputs>
+  </outputs>
+</tool>
