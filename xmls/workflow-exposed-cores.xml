@@ -7,14 +7,14 @@
           name='case_dir' 
           label='OpenFOAM Case Directory' 
           type='text' 
-          value='__WORKDIR__/pw/openfoam/cyclone-esi-template/' 
+          value='' 
           help='Full path to OpenFOAM case directory'
         ></param>
         <param 
           name='load_cmd' 
           label='Command to Load OpenFOAM' 
           type='text' 
-          value='module load OpenFoam/8' 
+          value='module load OpenFoam/9' 
           help='E.g.: module load, spack load, source, export PATH=, etc'
         ></param>
         <param 
