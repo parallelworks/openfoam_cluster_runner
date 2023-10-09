@@ -3,7 +3,7 @@
   <cancel interpreter='bash'>kill.sh</cancel>
   <inputs>
    <section name='openfoam' type='section' title='OpenFOAM' expanded='true'>
-        <param name='case_dir' label='OpenFOAM Case Directory' type='text' value='__WORKDIR__/pw/openfoam/cyclone-template/' help='Full path to OpenFOAM case directory' ></param>
+        <param name='case_dir' label='OpenFOAM Case Directory' type='text' value='' help='Full path to OpenFOAM case directory' ></param>
         <param name='__numberOfSubdomains__' label='Number of Subdomains' type='integer' min="1" max="128" help='OpenFOAM parameter numberOfSubdomains in the system/decomposeParDict file' value='4'></param>
         <param name='__nx_ny_nz__' label='Coefficients to Split Mesh in the x, y and z Directions' type='text' value='2 2 1' help='OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains'></param>
         <conditional name="image_cond">
