@@ -67,7 +67,7 @@
               label='Slurm Partition' 
               type='text' 
               help='Name of the SLURM partition to run the OpenFOAM cases' 
-              value='normal'
+              value=''
             ></param>
             <param 
               name='_sch__dd_ntasks_d_per_d_node_e_' 
