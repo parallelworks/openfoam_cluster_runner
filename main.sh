@@ -22,7 +22,7 @@ batch_header=resources/${rlabel}/batch_header.sh
 sshcmd="ssh -o StrictHostKeyChecking=no ${resource_publicIp}"
 
 # FIXME: Improve the tag of the openfoam parameters (openfoam_)
-openfoam_args=$(cat resources/${rlabel}/inputs.sh | grep openfoam_ | grep -v resource_ | sed "s|export openfoam_|--|g" | tr '=' ' ')
+openfoam_args=$(cat resources/${rlabel}/inputs.sh | grep openfoam_ | grep -v resource_ | grep -v marketplace | sed "s|export openfoam_|--|g" | tr '=' ' ')
 echo "OpenFOAM args: ${openfoam_args}"
 
 echo; echo "PREPARING KILL SCRIPT TO CLEAN JOB"
@@ -63,7 +63,7 @@ if [[ "${json_exists}" == "true" ]]; then
     scp create_cases.py ${resource_publicIp}:${resource_jobdir}
     # Obtain and format OpenFOAM parameters from workflow input form
     {
-        ${sshcmd} /usr/bin/python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}    
+        ${sshcmd} python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}    
     } || {
         echo; echo;
         echo "ERROR: The command below failed. Make sure python3 is in the remote PATH!"
