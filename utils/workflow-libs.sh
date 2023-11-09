@@ -41,7 +41,7 @@ cluster_rsync_exec() {
 
 get_job_status(){
     # Runs inside wait_job and wait_job_timeout
-    job_status=$($sshcmd ${status_cmd} | grep ${jobid} | awk '{print $5}')
+    job_status=$($sshcmd ${status_cmd} | awk -v id="${jobid}" '$1 == id {print $5}')
     if [[ ${jobschedulertype} == "SLURM" ]]; then
         # If job status is empty job is no longer running
         if [ -z "${job_status}" ]; then
