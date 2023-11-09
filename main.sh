@@ -63,7 +63,7 @@ if [[ "${json_exists}" == "true" ]]; then
     scp create_cases.py ${resource_publicIp}:${resource_jobdir}
     # Obtain and format OpenFOAM parameters from workflow input form
     {
-        ${sshcmd} python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}    
+        ${sshcmd} /usr/bin/python3 ${resource_jobdir}/create_cases.py --cases_json ${cases_json_file} --jobdir ${resource_jobdir} ${openfoam_args}    
     } || {
         echo; echo;
         echo "ERROR: The command below failed. Make sure python3 is in the remote PATH!"
