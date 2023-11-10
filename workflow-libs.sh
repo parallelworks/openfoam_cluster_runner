@@ -18,6 +18,7 @@ cluster_rsync_exec() {
         resource_label=$(basename ${resource_dir})
 
         # Load resource inputs
+        echo "export PW_RESOURCE_DIR=${PWD}/${resource_dir}" >> ${resource_dir}/inputs.sh
         source ${resource_dir}/inputs.sh
 
         echo; echo "Running ${path_to_rsync_exec_sh} in ${resource_publicIp}"
@@ -30,14 +31,76 @@ cluster_rsync_exec() {
         destination=${resource_publicIp}:${resource_jobdir}/${resource_label}/
         echo "rsync -avzq --rsync-path="mkdir -p ${resource_jobdir} && rsync " ${origin} ${destination}"
         rsync -avzq --rsync-path="mkdir -p ${resource_jobdir} && rsync " ${origin} ${destination}
-        
+
         # Execute the script
         echo "ssh -o StrictHostKeyChecking=no ${resource_publicIp} ${resource_jobdir}/${resource_label}/cluster_rsync_exec.sh"
         ssh -o StrictHostKeyChecking=no ${resource_publicIp} ${resource_jobdir}/${resource_label}/cluster_rsync_exec.sh
     done
 }
 
+cancel_jobs_by_name() {
+    # Cancels the jobs submitted by the cluster_rsync_exec function using the job's name
+    for resource_inputs_sh in $(find resources -name inputs.sh); do
+        resource_dir=$(dirname ${resource_inputs_sh})
+        resource_label=$(basename ${resource_dir})
 
+        source ${resource_inputs_sh}
+        
+        if [ "${jobschedulertype}" != "PBS" ] && [ "${jobschedulertype}" != "SLURM" ]; then
+            continue
+        fi
+
+        echo; echo "Canceling jobs in ${resource_name} - ${resource_publicIp}"
+
+        # Prepare cancel script
+        if [[ ${jobschedulertype} == "SLURM" ]]; then
+            # FIXME: Add job_name to input_form_resource_wrapper
+            job_name=$(cat ${resource_dir}/batch_header.sh | grep -e '--job-name' | cut -d'=' -f2)
+            job_ids=$(ssh -o StrictHostKeyChecking=no ${resource_publicIp} squeue -h -o "%i" -n ${job_name})
+            if [ -z "${job_ids}" ]; then
+                echo "No jobs found in ${resource_name} - ${resource_publicIp}"
+                continue
+            fi
+        elif [[ ${jobschedulertype} == "PBS" ]]; then
+            # FIXME: Add job_name to input_form_resource_wrapper
+            job_name=$(cat ${resource_dir}/batch_header.sh | grep -e '#PBS -N' | cut -d'=' -f2)
+            job_ids=$(ssh -o StrictHostKeyChecking=no ${resource_publicIp} qselect -N ${job_name})
+            if [ -z "${job_ids}" ]; then
+                echo "No jobs found in ${resource_name} - ${resource_publicIp}"
+                continue
+            fi
+        fi
+
+        echo "${cancel_cmd} ${job_ids}" | tr '\n' ' ' >> ${resource_dir}/cancel_job.sh
+        echo "${resource_dir}/cancel_job.sh:"
+        cat ${resource_dir}/cancel_job.sh
+        
+        # Run cancel script
+        echo "ssh -o StrictHostKeyChecking=no ${resource_publicIp} 'bash -s' < ${resource_dir}/cancel_job.sh"
+        ssh -o StrictHostKeyChecking=no ${resource_publicIp} 'bash -s' < ${resource_dir}/cancel_job.sh
+
+    done
+
+}
+
+cancel_jobs_by_script() {
+    # Runs every cancel.sh script located on the remote resource directory
+    for resource_inputs_sh in $(find resources -name inputs.sh); do
+        resource_dir=$(dirname ${resource_inputs_sh})
+        resource_label=$(basename ${resource_dir})
+
+        source ${resource_inputs_sh}
+
+        cancel_script="${resource_jobdir}/${resource_label}/cancel.sh"
+        cancel_script_exists=$(ssh ${resource_publicIp} "[ -f \"${cancel_script}\" ]" && echo "True" || echo "False")
+
+        if [[ ${cancel_script_exists} == "True" ]]; then
+            echo; echo "Running Canceling script ${cancel_script} in ${resource_name} - ${resource_publicIp}"
+            ssh -o StrictHostKeyChecking=no ${resource_publicIp} ${cancel_script}
+        fi
+    done
+
+}
 
 get_job_status(){
     # Runs inside wait_job and wait_job_timeout
@@ -48,7 +111,7 @@ get_job_status(){
             job_status=$($sshcmd sacct -j ${jobid}  --format=state | tail -n1)
             echo "    Job ${jobid} exited with status ${job_status}"
             if [[ "${job_status}" == *"FAILED"* ]]; then
-                echo "ERROR: SLURM job [${slurm_job}] failed"
+                echo "ERROR: SLURM job [${jobid}] failed"
                 return 2
             else
                 return 1
@@ -78,9 +141,10 @@ wait_job() {
         # squeue won't give you status of jobs that are not running or waiting to run
         # qstat returns the status of all recent jobs
         get_job_status
-        if [[ $? -eq 1 ]]; then
+        ec=$?
+        if [[ ${ec} -eq 1 ]]; then
             break
-        elif [[ $? -eq 2 ]]; then
+        elif [[ ${ec} -eq 2 ]]; then
             exit 1
         fi
         echo "    Job ${jobid} status: ${job_status}"
@@ -154,4 +218,23 @@ create_conda_env_from_yaml() {
             exit 1
         }
     }
+}
+
+findAvailablePort() {
+    # Find an available availablePort
+    minPort=6000
+    maxPort=9000
+    for port in $(seq ${minPort} ${maxPort} | shuf); do
+        out=$(netstat -aln | grep LISTEN | grep ${port})
+        if [ -z "${out}" ]; then
+            # To prevent multiple users from using the same available port --> Write file to reserve it
+            portFile=/tmp/${port}.port.used
+            if ! [ -f "${portFile}" ]; then
+                touch ${portFile}
+                availablePort=${port}
+                echo ${port}
+                break
+            fi
+        fi
+    done
 }
