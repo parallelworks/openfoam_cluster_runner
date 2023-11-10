@@ -1,20 +1,13 @@
-import json, sys, shutil, os, argparse
-
-
-def read_args():
-    parser = argparse.ArgumentParser()
-    parsed, unknown = parser.parse_known_args()
-    for arg in unknown:
-        if arg.startswith(("-", "--")):
-            parser.add_argument(arg, default="", nargs="?")
-    args = vars(parser.parse_args())
-    return args
+import json, shutil, os
 
 
 if __name__ == '__main__':
-    args = read_args()
-    cases_json = args['cases_json']
-    jobdir = args['jobdir']
+    with open('inputs.json') as inputs_json:
+        form_inputs = json.load(inputs_json)
+
+    openfoam_inputs = form_inputs['openfoam']
+    cases_json = os.path.join(openfoam_inputs['case_dir'], 'cases.json')
+    jobdir = form_inputs['resource']['jobdir']
 
     os.chdir(jobdir)
 
@@ -39,8 +32,8 @@ if __name__ == '__main__':
             for pi, param in enumerate(fdict['parameters']):
                 placeholder = param['placeholder']
                 value = str(param['value'])
-                if placeholder in args:
-                    value = args[placeholder].replace('___', ' ')
+                if placeholder in openfoam_inputs:
+                    value = openfoam_inputs[placeholder].replace('___', ' ')
                     case['files'][fi]['parameters'][pi]['value'] = value
                 print('      Replacing placeholder <{}> with value <{}>'.format(placeholder, value))
                 ftext = ftext.replace(placeholder, value)
