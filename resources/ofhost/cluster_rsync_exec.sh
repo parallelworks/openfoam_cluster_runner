@@ -92,16 +92,19 @@ for case_dir in ${case_dirs}; do
     echo "  Running:"
     echo "  bash ${submit_cmd} ${submit_job_sh}"
     if [[ ${jobschedulertype} == "SLURM" ]]; then 
-        slurm_job=$(${submit_cmd} ${submit_job_sh} | tail -1 | awk -F ' ' '{print $4}')
+        batch_job=$(${submit_cmd} ${submit_job_sh} | tail -1 | awk -F ' ' '{print $4}')
     elif [[ ${jobschedulertype} == "PBS" ]]; then
-        slurm_job=$(${submit_cmd} ${submit_job_sh} | tail -1)
+        batch_job=$(${submit_cmd} ${submit_job_sh} | tail -1)
     fi
-    if [ -z "${slurm_job}" ]; then
+    if [ -z "${batch_job}" ]; then
         echo "    ERROR submitting job - exiting the workflow"
         exit 1
     fi
-    echo "    Submitted job ${slurm_job}"
-    echo ${slurm_job} > ${resource_jobdir}/${case_dir}/slurm_job.submitted
+    # Required to cancel the job from PW:
+    echo "${cancel_cmd} ${batch_job}" >> cancel.sh
+    echo "    Submitted job ${batch_job}"
+    # Only one batch job per case dir
+    echo ${batch_job} > ${resource_jobdir}/${case_dir}/batch_job.submitted
 done
 
 
@@ -110,7 +113,7 @@ done
 echo; echo "CHECKING JOBS STATUS"
 while true; do
     date
-    submitted_jobs=$(find ${resource_jobdir} -name slurm_job.submitted)
+    submitted_jobs=$(find ${resource_jobdir} -name batch_job.submitted)
 
     if [ -z "${submitted_jobs}" ]; then
         if [[ "${FAILED}" == "true" ]]; then
@@ -132,7 +135,7 @@ while true; do
         elif [[ ${job_status_ec} -eq 2 ]]; then
             # Job failed
             FAILED=true
-            FAILED_JOBS="${slurm_job}, ${FAILED_JOBS}"
+            FAILED_JOBS="${jobid}, ${FAILED_JOBS}"
         fi
     done
     sleep 60
