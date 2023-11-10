@@ -57,9 +57,9 @@ echo; echo "CREATING SLURM WRAPPERS"
 for case_dir in ${case_dirs}; do
     echo "  Case directory: ${case_dir}"
     # Case directory in user container
-    mkdir -p ${PWD}/${case_dir}
-    submit_job_sh=${PWD}/${case_dir}/submit_job.sh
-    chdir=${PWD}/${case_dir}
+    mkdir -p ${resource_jobdir}/${case_dir}
+    submit_job_sh=${resource_jobdir}/${case_dir}/submit_job.sh
+    chdir=${resource_jobdir}/${case_dir}
     # Create submit script
     cp batch_header.sh ${submit_job_sh}
     if [[ ${jobschedulertype} == "SLURM" ]]; then 
@@ -88,7 +88,7 @@ done
 echo; echo "LAUNCHING JOBS"
 for case_dir in ${case_dirs}; do
     echo "  Case directory: ${case_dir}"
-    submit_job_sh=${PWD}/${case_dir}/submit_job.sh
+    submit_job_sh=${resource_jobdir}/${case_dir}/submit_job.sh
     echo "  Running:"
     echo "  bash ${submit_cmd} ${submit_job_sh}"
     if [[ ${jobschedulertype} == "SLURM" ]]; then 
@@ -101,7 +101,7 @@ for case_dir in ${case_dirs}; do
         exit 1
     fi
     echo "    Submitted job ${slurm_job}"
-    echo ${slurm_job} > ${PWD}/${case_dir}/slurm_job.submitted
+    echo ${slurm_job} > ${resource_jobdir}/${case_dir}/slurm_job.submitted
 done
 
 
@@ -110,7 +110,7 @@ done
 echo; echo "CHECKING JOBS STATUS"
 while true; do
     date
-    submitted_jobs=$(find . -name slurm_job.submitted)
+    submitted_jobs=$(find ${resource_jobdir} -name slurm_job.submitted)
 
     if [ -z "${submitted_jobs}" ]; then
         if [[ "${FAILED}" == "true" ]]; then
