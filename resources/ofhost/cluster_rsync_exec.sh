@@ -92,9 +92,9 @@ for case_dir in ${case_dirs}; do
     echo "  Running:"
     echo "  bash ${submit_cmd} ${submit_job_sh}"
     if [[ ${jobschedulertype} == "SLURM" ]]; then 
-        slurm_job=$(bash ${submit_cmd} ${submit_job_sh} | tail -1 | awk -F ' ' '{print $4}')
+        slurm_job=$(${submit_cmd} ${submit_job_sh} | tail -1 | awk -F ' ' '{print $4}')
     elif [[ ${jobschedulertype} == "PBS" ]]; then
-        slurm_job=$(bash ${submit_cmd} ${submit_job_sh} | tail -1)
+        slurm_job=$(${submit_cmd} ${submit_job_sh} | tail -1)
     fi
     if [ -z "${slurm_job}" ]; then
         echo "    ERROR submitting job - exiting the workflow"
