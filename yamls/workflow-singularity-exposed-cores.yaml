@@ -4,7 +4,7 @@ jobs:
       - name: main
         run: bash main.sh
         cleanup: bash cancel.sh
-        
+
 'on':
   execute:
     inputs:
@@ -59,7 +59,7 @@ jobs:
             type: string
             default: SLURM
             hidden: true
-          _sch__dd_partition_e__:
+          _sch__dd_partition_e_:
             label: SLURM partition
             type: slurm-partitions
             resource: ${{ inputs.pwrl_ofhost.resource }}
