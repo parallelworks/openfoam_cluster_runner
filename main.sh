@@ -5,7 +5,16 @@ source /etc/profile.d/parallelworks.sh
 source /etc/profile.d/parallelworks-env.sh
 source /pw/.miniconda3/etc/profile.d/conda.sh
 conda activate
-python3 /swift-pw-bin/utils/input_form_resource_wrapper.py 
+
+if [ -z "${workflow_utils_branch}" ]; then
+    # If empty, clone the main default branch
+    git clone https://github.com/parallelworks/workflow-utils.git
+else
+    # If not empty, clone the specified branch
+    git clone -b "$workflow_utils_branch" https://github.com/parallelworks/workflow-utils.git
+fi
+
+python3 ./workflow-utils/input_form_resource_wrapper.py 
 
 # Load useful functions
 source workflow-libs.sh
