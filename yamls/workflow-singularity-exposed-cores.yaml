@@ -1,0 +1,96 @@
+jobs:
+  main:
+    steps:
+      - name: main
+        run: bash main.sh
+        cleanup: bash cancel.sh
+        
+'on':
+  execute:
+    inputs:
+      openfoam:
+        type: group
+        label: OpenFOAM
+        items:
+          case_dir:
+            label: OpenFOAM Case Directory
+            tooltip: Full path to OpenFOAM case directory
+            type: string
+          __number_of_subdomains__:
+            label: Number of Subdomains
+            type: number
+            min: 1
+            max: 128
+            default: 4
+            tooltip: OpenFOAM parameter numberOfSubdomains in the system/decomposeParDict file
+          __nx_ny_nz__:
+            label: Coefficients to Split Mesh in the x, y and z Directions
+            type: string
+            default: 2 2 1
+            tooltip: OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains
+          image:
+            type: dropdown
+            label: Base OpenFOAM image
+            default: openfoam10-paraview56
+            options:
+              - value: openfoam10-paraview56
+                label: openfoam10-paraview56
+              - value: openfoam9-paraview56
+                label: openfoam9-paraview56
+              - value: openfoam8-paraview56
+                label: openfoam8-paraview56
+              - value: openfoam7-paraview56
+                label: openfoam7-paraview56
+              - value: openfoam6-paraview56
+                label: openfoam6-paraview56
+          sif_file:
+            type: string
+            default: ~/pw/software/openfoam/openfoam.sif
+      pwrl_ofhost:
+        type: group
+        label: Executor
+        items:
+          resource:
+            type: compute-clusters
+            label: Service host
+            include-workspace: false
+            tooltip: Resource to run OpenFOAM
+          jobschedulertype:
+            type: string
+            default: SLURM
+            hidden: true
+          _sch__dd_partition_e__:
+            label: SLURM partition
+            type: slurm-partitions
+            resource: ${{ inputs.pwrl_ofhost.resource }}
+            tooltip: SLURM partition to submit the OpenFOAM job
+            optional: true
+          _sch__dd_ntasks_d_per_d_node_e_:
+            label: Tasks per Node
+            type: number
+            min: 1
+            max: 64
+            default: 4
+            tooltip: '--ntasks-per-node=value slurm directive'
+          _sch__dd_nodes_e_:
+            label: Number of Nodes
+            type: number
+            min: 1
+            max: 1
+            default: 1
+            tooltip: '--nodes=value slurm directive'
+          _sch__dd_time_e_:
+            label: Walltime
+            type: string
+            default: '02:00:00'
+            tooltip: Maximum walltime per OpenFOAM case
+          scheduler_directives:
+            label: Scheduler Directives
+            type: string
+            tooltip: e.g. --mem=1000;--gpus-per-node=1 - Use the semicolon character ; to separate parameters. Do not include the SBATCH keyword.
+            optional: true
+          workdir:
+            label: Shared Work Directory
+            type: string
+            tooltip: This directory must be shared between the compute and login nodes. This parameter overwrites the working directory in the resource definition page
+            default: ~/
