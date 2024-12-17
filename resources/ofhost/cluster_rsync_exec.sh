@@ -45,6 +45,13 @@ if [ -f ${cases_json_file} ]; then
     python3 -c "import json; c=${cases_json}; print(json.dumps(c, indent=4))"
     # create_cases.py reads inputs.json
     python3 create_cases.py
+    exit_code=$?
+    # Check if the command failed
+    if [ $exit_code -ne 0 ]; then
+        echo "Error: The script create_cases.py failed with exit code $exit_code." >&2
+        exit $exit_code
+    fi
+fi
     
 else
     case_dirs="case"
