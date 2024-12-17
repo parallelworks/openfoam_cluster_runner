@@ -33,7 +33,7 @@ if __name__ == '__main__':
                 placeholder = param['placeholder']
                 value = str(param['value'])
                 if placeholder in openfoam_inputs:
-                    value = openfoam_inputs[placeholder].replace('___', ' ')
+                    value = str(openfoam_inputs[placeholder]).replace('___', ' ')
                     case['files'][fi]['parameters'][pi]['value'] = value
                 print('      Replacing placeholder <{}> with value <{}>'.format(placeholder, value))
                 ftext = ftext.replace(placeholder, value)
