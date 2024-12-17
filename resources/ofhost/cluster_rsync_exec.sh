@@ -51,8 +51,6 @@ if [ -f ${cases_json_file} ]; then
         echo "Error: The script create_cases.py failed with exit code $exit_code." >&2
         exit $exit_code
     fi
-fi
-    
 else
     case_dirs="case"
     echo; echo "Copying OpenFOAM case from [${openfoam_case_dir}] to [${resource_jobdir}/${case_dirs}]"
