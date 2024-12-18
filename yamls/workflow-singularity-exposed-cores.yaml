@@ -3,7 +3,7 @@ jobs:
     steps:
       - name: main
         run: bash main.sh
-        cleanup: bash cancel.sh
+        cleanup: bash kill.sh
 
 'on':
   execute:
@@ -93,4 +93,3 @@ jobs:
             label: Shared Work Directory
             type: string
             tooltip: This directory must be shared between the compute and login nodes. This parameter overwrites the working directory in the resource definition page
-            default: ~/
