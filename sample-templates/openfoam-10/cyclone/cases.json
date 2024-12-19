@@ -7,7 +7,7 @@
                     "path": "system/decomposeParDict",
                     "parameters": [
                         {
-                            "placeholder": "__numberOfSubdomains__",
+                            "placeholder": "__number_of_subdomains__",
                             "value": 4
                         },
                         {
@@ -46,7 +46,7 @@
                     "path": "system/decomposeParDict",
                     "parameters": [
                         {
-                            "placeholder": "__numberOfSubdomains__",
+                            "placeholder": "__number_of_subdomains__",
                             "value": 4
                         },
                         {

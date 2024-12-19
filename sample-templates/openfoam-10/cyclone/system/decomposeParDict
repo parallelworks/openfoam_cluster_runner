@@ -14,7 +14,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-numberOfSubdomains __numberOfSubdomains__;
+numberOfSubdomains __number_of_subdomains__;
 
 method          simple;
 
