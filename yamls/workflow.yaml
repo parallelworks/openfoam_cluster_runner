@@ -3,6 +3,8 @@ jobs:
     steps:
       - name: Preprocessing Inputs
         run: |
+          source inputs.sh
+          sed -i "s|__WORKDIR__|/home/${pwrl_ofhost_resource_username}|g" inputs.json
           # These lines should not really be necessary but they are needed on some platforms for some reason
           source /etc/profile.d/parallelworks.sh
           source /etc/profile.d/parallelworks-env.sh
@@ -240,9 +242,17 @@ jobs:
             type: string
             default: 2 2 1
             tooltip: OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains
+          use_singularity:
+            label: Install miniconda environment if not there?
+            type: boolean
+            default: true
+            tooltip: Select Yes to run OpenFOAM with singularity
           image:
             type: dropdown
             label: Base OpenFOAM image
+            hidden: ${{ inputs.openfoam.use_singularity == false }}
+            ignore: ${{ .hidden }}
+            optional: ${{ .hidden }}
             default: openfoam10-paraview56
             options:
               - value: openfoam10-paraview56
@@ -257,7 +267,18 @@ jobs:
                 label: openfoam6-paraview56
           sif_file:
             type: string
-            default: ~/pw/software/openfoam/openfoam.sif
+            hidden: ${{ inputs.openfoam.use_singularity == false }}
+            ignore: ${{ .hidden }}
+            optional: ${{ .hidden }}
+            default: __WORKDIR__/pw/software/openfoam/openfoam.sif
+          load_cmd:
+            label: Command to Load OpenFOAM
+            type: string
+            hidden: ${{ inputs.openfoam.use_singularity == true }}
+            ignore: ${{ .hidden }}
+            optional: ${{ .hidden }}
+            tooltip: "E.g.: module load, spack load, source, export PATH=, etc"
+
       pwrl_ofhost:
         type: group
         label: Executor
@@ -305,4 +326,4 @@ jobs:
             label: Shared Work Directory
             type: string
             tooltip: This directory must be shared between the compute and login nodes. This parameter overwrites the working directory in the resource definition page
-            default: ~/
+            default: __WORKDIR__
