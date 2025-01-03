@@ -243,7 +243,7 @@ jobs:
             default: 2 2 1
             tooltip: OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains
           use_singularity:
-            label: Install miniconda environment if not there?
+            label: Use Singularity?
             type: boolean
             default: true
             tooltip: Select Yes to run OpenFOAM with singularity
