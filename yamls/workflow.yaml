@@ -306,6 +306,7 @@ jobs:
             tooltip: '--ntasks-per-node=value slurm directive'
           _sch__dd_nodes_e_:
             label: Number of Nodes
+            hidden: ${{ inputs.openfoam.use_singularity == true }}
             type: number
             min: 1
             max: 1
