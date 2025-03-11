@@ -1,6 +1,6 @@
 
 bdir=$(dirname $0)
-module load singularity
+
 
 # Install singularity if it does not exist:
 if [ -z $(which singularity) ]; then

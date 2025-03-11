@@ -133,7 +133,6 @@ jobs:
 
             if [ -z "${openfoam_load_cmd}" ]; then
                 # FIXME: Support multinode singularity
-                cat singularity_wrapper.sh >> \${submit_job_sh}
                 echo "singularity exec -B ${resource_jobdir}/\${case_dir}:${resource_jobdir}/\${case_dir} ${openfoam_sif_file} /bin/bash ./Allrun" >> \${submit_job_sh}
             else
                 echo "${openfoam_load_cmd}" | sed "s|___| |g" | tr ';' '\n' >> \${submit_job_sh}
@@ -307,6 +306,7 @@ jobs:
             tooltip: '--ntasks-per-node=value slurm directive'
           _sch__dd_nodes_e_:
             label: Number of Nodes
+            hidden: ${{ inputs.openfoam.use_singularity == true }}
             type: number
             min: 1
             max: 1
