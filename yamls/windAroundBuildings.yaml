@@ -83,6 +83,7 @@ jobs:
         env:
           sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
         run: |
+          set -x
           source resources/ofhost/inputs.sh
           cases_json_file=${openfoam_case_dir}/cases.json
           ${sshcmd} << EOF
@@ -91,7 +92,7 @@ jobs:
             echo; echo "CREATING OPENFOAM CASES"
             cases_json=\$(cat ${cases_json_file})
             cases_dir=$(jq -r '.cases[].directory')
-            echo "${case_dirs}" > case_dirs.txt
+            echo "\${case_dirs}" > case_dirs.txt
             echo "  Creating run directories:" \${case_dirs}
             python3 -c "import json; c=\${cases_json}; print(json.dumps(c, indent=4))"
             # create_cases.py reads inputs.json
