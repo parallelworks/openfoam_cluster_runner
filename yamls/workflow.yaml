@@ -44,10 +44,11 @@ jobs:
           set -x
           if [ -z "${openfoam_case_dir}" ]; then
             echo "No case directory was provided"
-            echo "Copying sample-templates/openfoam-10/cyclone"
+            echo "Copying sample-templates/openfoam-10/windAroundBuildings"
             openfoam_case_dir=${resource_workdir}/${RANDOM}
-            rsync -avz -e ssh --rsync-path="mkdir -p ${resource_jobdir} && rsync" sample-templates/openfoam-10/cyclone ${resource_publicIp}:${openfoam_case_dir}
-            echo "export openfoam_case_dir=${openfoam_case_dir}/cyclone" >> resources/ofhost/inputs.sh
+            rsync -avz -e ssh --rsync-path="mkdir -p ${resource_jobdir} && rsync" sample-templates/openfoam-10/windAroundBuildings ${resource_publicIp}:${openfoam_case_dir}
+            echo "export openfoam_case_dir=${openfoam_case_dir}/windAroundBuildings" >> resources/ofhost/inputs.sh
+            jq '.openfoam += {"case_dir": "path/to/dir"}' inputs.json > temp.json && mv temp.json inputs.json
           fi
 
           if ! ${sshcmd} "[ -d ${openfoam_case_dir} ]"; then
