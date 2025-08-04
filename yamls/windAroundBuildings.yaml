@@ -1,0 +1,338 @@
+jobs:
+  main:
+    steps:
+      - name: Preprocessing Inputs
+        run: |
+          source inputs.sh
+          sed -i "s|__WORKDIR__|/home/${pwrl_ofhost_resource_username}|g" inputs.json
+          # These lines should not really be necessary but they are needed on some platforms for some reason
+          source /etc/profile.d/parallelworks.sh
+          source /etc/profile.d/parallelworks-env.sh
+          source /pw/.miniconda3/etc/profile.d/conda.sh
+          conda activate
+          if [ -z "${workflow_utils_branch}" ]; then
+            # If empty, clone the main default branch
+            git clone https://github.com/parallelworks/workflow-utils.git
+          else
+            # If not empty, clone the specified branch
+            git clone -b "$workflow_utils_branch" https://github.com/parallelworks/workflow-utils.git
+          fi
+          python3 ./workflow-utils/input_form_resource_wrapper_no_tunnel.py
+
+          if [ $? -ne 0 ]; then
+            echo "ERROR - Resource wrapper failed"
+            exit 1
+          fi
+
+          if ! [ -f "resources/ofhost/inputs.sh" ]; then
+            echo "ERROR - Missing file ./resources/host/inputs.sh. Resource wrapper failed"
+            exit 1
+          fi
+      - name: Checking Requirements
+        env:
+          sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
+        run: |
+          if ! ${sshcmd} "command -v python3 &> /dev/null"; then
+            echo "ERROR: Python 3 is not in the PATH. Exiting workflow."
+            exit 1
+          fi
+      - name: Checking OpenFOAM case
+        env:
+          sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
+        run: |
+          source resources/ofhost/inputs.sh
+          set -x
+          if [ -z "${openfoam_case_dir}" ]; then
+            echo "No case directory was provided"
+            echo "Copying sample-templates/openfoam-10/windAroundBuildings"
+            openfoam_case_dir=${resource_workdir}/${RANDOM}
+            rsync -avz -e ssh --rsync-path="mkdir -p ${resource_jobdir} && rsync" sample-templates/openfoam-10/windAroundBuildings ${resource_publicIp}:${openfoam_case_dir}
+            echo "export openfoam_case_dir=${openfoam_case_dir}/windAroundBuildings" >> resources/ofhost/inputs.sh
+          fi
+
+          if ! ${sshcmd} "[ -d ${openfoam_case_dir} ]"; then
+            echo "ERROR: Could not find OpenFOAM case [${openfoam_case_dir}] on remote host [${resource_publicIp}]"
+            echo "Try: ${sshcmd} ls ${openfoam_case_dir}"
+            exit 1
+          fi
+      - name: Transferring Files
+        run: |
+          source resources/ofhost/inputs.sh
+          source workflow-utils/workflow-libs.sh
+          single_cluster_rsync ${PWD}/resources/ofhost
+      - name: Building Singularity Container
+        env:
+          sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
+        run: |
+          source resources/ofhost/inputs.sh
+          if ! [ -z "${openfoam_load_cmd}" ]; then
+            exit 0
+          fi
+
+          ${sshcmd} << EOF
+          cd ${resource_jobdir}/ofhost/
+          echo "Build singularity container if not present"
+          set -x
+          cat bootstrap/openfoam-template.def | sed "s/__openfoam_image__/${openfoam_image}/g" > bootstrap/${openfoam_image}.def
+          cat inputs.sh | grep openfoam_ > bootstrap/bootstrap.sh
+          cat bootstrap/bootstrap_template.sh >> bootstrap/bootstrap.sh 
+          bash bootstrap/bootstrap.sh 
+          exit 0
+          EOF   
+      - name: Creating OpenFOAM Cases
+        env:
+          sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
+        run: |
+          source resources/ofhost/inputs.sh
+          cases_json_file=${openfoam_case_dir}/cases.json
+          ${sshcmd} << EOF
+          cd ${resource_jobdir}/ofhost/
+          if [ -f ${cases_json_file} ]; then
+            echo; echo "CREATING OPENFOAM CASES"
+            cases_json=\$(cat ${cases_json_file})
+            case_dirs=\$(python3 -c "c=\${cases_json}; [ print(case['directory']) for ci,case in enumerate(c['cases'])]")
+            echo "${case_dirs}" > case_dirs.txt
+            echo "  Creating run directories:" \${case_dirs}
+            python3 -c "import json; c=\${cases_json}; print(json.dumps(c, indent=4))"
+            # create_cases.py reads inputs.json
+            python3 create_cases.py
+            exit_code=\$?
+            # Check if the command failed
+            if [ \$exit_code -ne 0 ]; then
+              echo "Error: The script create_cases.py failed with exit code \$exit_code." >&2
+              exit \$exit_code
+            fi
+          else
+            case_dirs="case"
+            echo; echo "Copying OpenFOAM case from [${openfoam_case_dir}] to [${resource_jobdir}/${case_dirs}]"
+            cp -r ${openfoam_case_dir} ${resource_jobdir}/\${case_dirs}
+          fi
+          echo \${case_dirs} >> case_dirs.txt
+          EOF
+          case_dirs=$(${sshcmd} cat ${resource_jobdir}/ofhost/case_dirs.txt  | tail -n1)
+          echo "case_dirs=${case_dirs}" >> $OUTPUTS
+
+
+      - name: Create Job Scripts
+        env:
+          sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
+          case_dirs: ${{ needs.main.outputs.case_dirs }}
+        run: | 
+          source resources/ofhost/inputs.sh
+          ${sshcmd} << EOF
+          cd ${resource_jobdir}/ofhost/
+          for case_dir in ${case_dirs}; do
+            echo "  Case directory: \${case_dir}"
+            # Case directory in user container
+            mkdir -p ${resource_jobdir}/\${case_dir}
+            submit_job_sh=${resource_jobdir}/\${case_dir}/submit_job.sh
+            chdir=${resource_jobdir}/\${case_dir}
+            # Create submit script
+            cp batch_header.sh \${submit_job_sh}
+            if [[ ${jobschedulertype} == "SLURM" ]]; then 
+              echo "#SBATCH -o \${chdir}/std.out" >> \${submit_job_sh}
+              echo "#SBATCH -e \${chdir}/std.out" >> \${submit_job_sh}
+            elif [[ ${jobschedulertype} == "PBS" ]]; then
+              echo "#PBS -o \${chdir}/std.out" >> \${submit_job_sh}
+              echo "#PBS -e \${chdir}/std.out" >> \${submit_job_sh}
+            fi
+            echo "cd \${chdir}"              >> \${submit_job_sh}
+            echo "touch case.foam"          >> \${submit_job_sh}
+
+            if [ -z "${openfoam_load_cmd}" ]; then
+                # FIXME: Support multinode singularity
+                echo "singularity exec -B ${resource_jobdir}/\${case_dir}:${resource_jobdir}/\${case_dir} ${openfoam_sif_file} /bin/bash ./Allrun" >> \${submit_job_sh}
+            else
+                echo "${openfoam_load_cmd}" | sed "s|___| |g" | tr ';' '\n' >> \${submit_job_sh}
+                echo "/bin/bash ./Allrun"  >> \${submit_job_sh}
+            fi
+            echo
+            cat \${submit_job_sh}
+            echo
+          done
+          EOF
+
+      - name: Submit Jobs
+        env:
+          sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
+          case_dirs: ${{ needs.main.outputs.case_dirs }}
+        run: | 
+          source resources/ofhost/inputs.sh
+          ${sshcmd} << EOF
+          set -x
+          for case_dir in ${case_dirs}; do
+            cd ${resource_jobdir}/ofhost/
+            echo "  Case directory: \${case_dir}"
+            submit_job_sh=${resource_jobdir}/\${case_dir}/submit_job.sh
+            echo "  Running:"
+            echo "  ${submit_cmd} \${submit_job_sh}"
+            if [[ ${jobschedulertype} == "SLURM" ]]; then 
+              batch_job=\$(${submit_cmd} \${submit_job_sh} | tail -1 | awk -F ' ' '{print \$4}')
+            elif [[ ${jobschedulertype} == "PBS" ]]; then
+              batch_job=\$(${submit_cmd} \${submit_job_sh} | tail -1)
+            fi
+            if [ -z "\${batch_job}" ]; then
+              echo "    ERROR submitting job - exiting the workflow"
+              exit 1
+            fi
+            # Required to cancel the job from PW:
+            echo "${cancel_cmd} \${batch_job}" >> cancel.sh
+            echo "    Submitted job \${batch_job}"
+            # Only one batch job per case dir
+            echo \${batch_job} > ${resource_jobdir}/\${case_dir}/batch_job.submitted
+          done
+          EOF
+        cleanup: |
+          source resources/ofhost/inputs.sh
+          ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }} bash ${resource_jobdir}/ofhost/cancel.sh
+
+
+      - name: Checking Job
+        env:
+          sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
+          case_dirs: ${{ needs.main.outputs.case_dirs }}
+        run: | 
+          source resources/ofhost/inputs.sh
+          source workflow-utils/workflow-libs.sh
+          while true; do
+            date
+            submitted_jobs=$(${sshcmd} find ${resource_jobdir} -name batch_job.submitted)
+
+            if [ -z "${submitted_jobs}" ]; then
+              if [[ "${FAILED}" == "true" ]]; then
+                echo "ERROR: Jobs [${FAILED_JOBS}] failed"
+                exit 1
+              fi
+              echo "  All jobs are completed. Please check job logs in directories [${case_dirs}] and results"
+              exit 0
+            fi
+    
+            for sj in ${submitted_jobs}; do
+              jobid=$(${sshcmd} cat ${sj})
+
+
+              if [[ ${jobschedulertype} == "SLURM" ]]; then 
+                get_slurm_job_status
+              elif [[ ${jobschedulertype} == "PBS" ]]; then
+                get_slurm_job_status
+              fi
+              if [ -z "${job_status}" ]; then
+                ${sshcmd} mv ${sj} ${sj}.completed
+              elif [[ "${job_status}" == "C" ]]; then
+                ${sshcmd} mv ${sj} ${sj}.completed
+              fi
+            done
+            sleep 60
+          done
+
+
+'on':
+  execute:
+    inputs:
+      openfoam:
+        type: group
+        label: OpenFOAM
+        items:
+          case_dir:
+            label: OpenFOAM Case Directory
+            tooltip: Full path to OpenFOAM case directory
+            type: string
+            optional: true
+          __number_of_subdomains__:
+            label: Number of Subdomains
+            type: number
+            min: 1
+            max: 128
+            default: 4
+            tooltip: OpenFOAM parameter numberOfSubdomains in the system/decomposeParDict file
+          __nx_ny_nz__:
+            label: Coefficients to Split Mesh in the x, y and z Directions
+            type: string
+            default: 2 2 1
+            tooltip: OpenFOAM parameter coeffs in the system/decomposeParDict file. Note that the multiplication of these values must be equal to the number of subdomains
+          use_singularity:
+            label: Use Singularity?
+            type: boolean
+            default: true
+            tooltip: Select Yes to run OpenFOAM with singularity
+          image:
+            type: dropdown
+            label: Base OpenFOAM image
+            hidden: ${{ inputs.openfoam.use_singularity == false }}
+            ignore: ${{ .hidden }}
+            optional: ${{ .hidden }}
+            default: openfoam10-paraview56
+            options:
+              - value: openfoam10-paraview56
+                label: openfoam10-paraview56
+              - value: openfoam9-paraview56
+                label: openfoam9-paraview56
+              - value: openfoam8-paraview56
+                label: openfoam8-paraview56
+              - value: openfoam7-paraview56
+                label: openfoam7-paraview56
+              - value: openfoam6-paraview56
+                label: openfoam6-paraview56
+          sif_file:
+            type: string
+            hidden: ${{ inputs.openfoam.use_singularity == false }}
+            ignore: ${{ .hidden }}
+            optional: ${{ .hidden }}
+            default: __WORKDIR__/pw/software/openfoam/openfoam.sif
+          load_cmd:
+            label: Command to Load OpenFOAM
+            type: string
+            hidden: ${{ inputs.openfoam.use_singularity == true }}
+            ignore: ${{ .hidden }}
+            optional: ${{ .hidden }}
+            tooltip: "E.g.: module load, spack load, source, export PATH=, etc"
+
+      pwrl_ofhost:
+        type: group
+        label: Executor
+        items:
+          resource:
+            type: compute-clusters
+            label: Service host
+            include-workspace: false
+            tooltip: Resource to run OpenFOAM
+          jobschedulertype:
+            type: string
+            default: SLURM
+            hidden: true
+          _sch__dd_partition_e_:
+            label: SLURM partition
+            type: slurm-partitions
+            resource: ${{ inputs.pwrl_ofhost.resource }}
+            tooltip: SLURM partition to submit the OpenFOAM job
+            optional: true
+          _sch__dd_ntasks_d_per_d_node_e_:
+            label: Tasks per Node
+            type: number
+            min: 1
+            max: 64
+            default: 4
+            tooltip: '--ntasks-per-node=value slurm directive'
+          _sch__dd_nodes_e_:
+            label: Number of Nodes
+            hidden: ${{ inputs.openfoam.use_singularity == true }}
+            type: number
+            min: 1
+            max: 1
+            default: 1
+            tooltip: '--nodes=value slurm directive'
+          _sch__dd_time_e_:
+            label: Walltime
+            type: string
+            default: '02:00:00'
+            tooltip: Maximum walltime per OpenFOAM case
+          scheduler_directives:
+            label: Scheduler Directives
+            type: string
+            tooltip: e.g. --mem=1000;--gpus-per-node=1 - Use the semicolon character ; to separate parameters. Do not include the SBATCH keyword.
+            optional: true
+          workdir:
+            label: Shared Work Directory
+            type: string
+            tooltip: This directory must be shared between the compute and login nodes. This parameter overwrites the working directory in the resource definition page
+            default: __WORKDIR__
