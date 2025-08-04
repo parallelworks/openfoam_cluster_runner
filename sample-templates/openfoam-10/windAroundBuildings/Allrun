@@ -16,4 +16,7 @@ runParallel $(getApplication)
 
 #runApplication $(getApplication)
 
+runApplication reconstructParMesh -constant
+
+
 #------------------------------------------------------------------------------
