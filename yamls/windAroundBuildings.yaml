@@ -90,8 +90,7 @@ jobs:
           if [ -f ${cases_json_file} ]; then
             echo; echo "CREATING OPENFOAM CASES"
             cases_json=\$(cat ${cases_json_file})
-            case_dirs=\$(python3 -c "import json; c=json.loads('''${cases_json}'''); [print(case['directory']) for ci, case in enumerate(c['cases'])]")
-            #case_dirs=\$(python3 -c "c=\${cases_json}; [ print(case['directory']) for ci,case in enumerate(c['cases'])]")
+            cases_dir=$(jq -r '.cases[].directory')
             echo "${case_dirs}" > case_dirs.txt
             echo "  Creating run directories:" \${case_dirs}
             python3 -c "import json; c=\${cases_json}; print(json.dumps(c, indent=4))"
