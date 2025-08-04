@@ -47,7 +47,7 @@ jobs:
             echo "Copying sample-templates/openfoam-10/cyclone"
             openfoam_case_dir=${resource_workdir}/${RANDOM}
             rsync -avz -e ssh --rsync-path="mkdir -p ${resource_jobdir} && rsync" sample-templates/openfoam-10/cyclone ${resource_publicIp}:${openfoam_case_dir}
-            echo "export openfoam_case_dir=${openfoam_case_dir}" >> resources/ofhost/inputs.sh
+            echo "export openfoam_case_dir=${openfoam_case_dir}/cyclone" >> resources/ofhost/inputs.sh
           fi
 
           if ! ${sshcmd} "[ -d ${openfoam_case_dir} ]"; then
