@@ -41,7 +41,7 @@ jobs:
           sshcmd: ssh -o StrictHostKeyChecking=no ${{ inputs.pwrl_ofhost.resource.ip }}
         run: |
           source resources/ofhost/inputs.sh
-
+          set -x
           if [ -z "${openfoam_case_dir}" ]; then
             echo "No case directory was provided"
             echo "Copying sample-templates/openfoam-10/cyclone"
