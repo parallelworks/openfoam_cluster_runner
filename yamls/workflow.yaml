@@ -42,6 +42,14 @@ jobs:
         run: |
           source resources/ofhost/inputs.sh
 
+          if [ -z "${openfoam_case_dir}" ]; then
+            echo "No case directory was provided"
+            echo "Copying sample-templates/openfoam-10/cyclone"
+            rsync -avz -e ssh --rsync-path="mkdir -p ${resource_jobdir} && rsync" sample-templates/openfoam-10/cyclone ${resource_publicIp}:${resource_jobdir}
+            openfoam_case_dir=${resource_jobdir}/cyclone
+            echo "export openfoam_case_dir=${openfoam_case_dir}" >> resources/ofhost/inputs.sh
+          fi
+
           if ! ${sshcmd} "[ -d ${openfoam_case_dir} ]"; then
             echo "ERROR: Could not find OpenFOAM case [${openfoam_case_dir}] on remote host [${resource_publicIp}]"
             echo "Try: ${sshcmd} ls ${openfoam_case_dir}"
@@ -229,6 +237,7 @@ jobs:
             label: OpenFOAM Case Directory
             tooltip: Full path to OpenFOAM case directory
             type: string
+            optional: true
           __number_of_subdomains__:
             label: Number of Subdomains
             type: number
