@@ -48,7 +48,7 @@ jobs:
             openfoam_case_dir=${resource_workdir}/${RANDOM}
             rsync -avz -e ssh --rsync-path="mkdir -p ${resource_jobdir} && rsync" sample-templates/openfoam-10/windAroundBuildings ${resource_publicIp}:${openfoam_case_dir}
             echo "export openfoam_case_dir=${openfoam_case_dir}/windAroundBuildings" >> resources/ofhost/inputs.sh
-            jq '.openfoam += {"case_dir": "path/to/dir"}' inputs.json > temp.json && mv temp.json inputs.json
+            jq '.openfoam += {"case_dir": "${openfoam_case_dir}"}' inputs.json > temp.json && mv temp.json inputs.json
           fi
 
           if ! ${sshcmd} "[ -d ${openfoam_case_dir} ]"; then
